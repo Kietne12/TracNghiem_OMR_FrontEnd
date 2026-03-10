@@ -1,19 +1,51 @@
 import { useState } from "react"
 import { User, Lock, Eye, EyeOff } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "../../hooks/useAuth"
+import { toast } from "react-toastify"
+import { AxiosError } from "axios"
+import AlertMessage from "../../components/AlertMessage"
 
 export default function Login() {
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState("")
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { login } = useAuth()
+  const navigate = useNavigate()
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    console.log({
-      email,
-      password
-    })
+    setErrorMsg("")
+
+    if (!email || !password) {
+      setErrorMsg("Vui lòng nhập email và mật khẩu")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const user = await login(email, password)
+      toast.success("Đăng nhập thành công!")
+
+      // Redirect theo role
+      const roleRoutes: Record<string, string> = {
+        admin: "/admin/dashboard",
+        giangvien: "/giangvien/dashboard",
+        sinhvien: "/sinhvien/dashboard",
+      }
+      navigate(roleRoutes[user.role] || "/dashboard")
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>
+      const msg = error.response?.data?.message || "Đăng nhập thất bại"
+      setErrorMsg(msg)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -55,6 +87,13 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+
+          {/* Thông báo lỗi */}
+          <AlertMessage
+            type="error"
+            message={errorMsg}
+            onClose={() => setErrorMsg("")}
+          />
 
           {/* Email */}
           <div>
@@ -163,6 +202,7 @@ export default function Login() {
           {/* Button */}
           <button
             type="submit"
+            disabled={isLoading}
             className="
             w-full
             py-2.5
@@ -172,9 +212,11 @@ export default function Login() {
             hover:bg-pink-600
             transition
             shadow-lg
+            disabled:opacity-50
+            disabled:cursor-not-allowed
             "
           >
-            Đăng nhập
+            {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
 
         </form>
