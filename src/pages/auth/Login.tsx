@@ -1,38 +1,63 @@
 import { useState } from "react"
 import { User, Lock, Eye, EyeOff } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "../../hooks/useAuth"
+import { toast } from "react-toastify"
+import { AxiosError } from "axios"
+import AlertMessage from "../../components/AlertMessage"
 
 export default function Login() {
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState("")
 
+  const { login } = useAuth()
   const navigate = useNavigate()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // GIẢ LẬP LOGIN
-    const role = email.includes("gv") ? "giangvien" : "sinhvien"
+    setErrorMsg("")
 
-    if (role === "sinhvien") {
-      navigate("/sinhvien/dashboard")
+    if (!email || !password) {
+      setErrorMsg("Vui lòng nhập email và mật khẩu")
+      return
     }
 
-    if (role === "giangvien") {
-      navigate("/giangvien/dashboard")
+    setIsLoading(true)
+    try {
+      const user = await login(email, password)
+      toast.success("Đăng nhập thành công!")
+
+      // Redirect theo role
+      const roleRoutes: Record<string, string> = {
+        admin: "/admin/dashboard",
+        giangvien: "/giangvien/dashboard",
+        sinhvien: "/sinhvien/dashboard",
+      }
+      navigate(roleRoutes[user.role] || "/dashboard")
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>
+      const msg = error.response?.data?.message || "Đăng nhập thất bại"
+      setErrorMsg(msg)
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
     <div
       className="min-h-screen w-screen flex items-center justify-center bg-cover bg-center"
-      style={{ backgroundImage: "url('/background.png')" }} 
+      style={{ backgroundImage: "url('./public/background.png')" }}
     >
 
+      {/* overlay tối nhẹ */}
       <div className="absolute inset-0 bg-black/40"></div>
 
+      {/* LOGIN BOX */}
       <div
         className="
         relative
@@ -48,6 +73,7 @@ export default function Login() {
       "
       >
 
+        {/* Title */}
         <div className="text-center mb-8">
 
           <h1 className="text-3xl font-bold">
@@ -62,7 +88,14 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
 
-          {/* EMAIL */}
+          {/* Thông báo lỗi */}
+          <AlertMessage
+            type="error"
+            message={errorMsg}
+            onClose={() => setErrorMsg("")}
+          />
+
+          {/* Email */}
           <div>
 
             <label className="text-sm text-gray-200">
@@ -101,7 +134,7 @@ export default function Login() {
 
           </div>
 
-          {/* PASSWORD */}
+          {/* Password */}
           <div>
 
             <label className="text-sm text-gray-200">
@@ -136,10 +169,11 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
               />
 
+              {/* ICON CON MẮT */}
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-2.5 text-gray-300 hover:text-white transition"
+                className="absolute right-3 top-2.5 text-gray-300 hover:text-white hover:scale-110 transition"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -148,7 +182,7 @@ export default function Login() {
 
           </div>
 
-          {/* REMEMBER */}
+          {/* Remember */}
           <div className="flex justify-between text-sm text-gray-200">
 
             <label className="flex items-center gap-2">
@@ -165,9 +199,10 @@ export default function Login() {
 
           </div>
 
-          {/* BUTTON */}
+          {/* Button */}
           <button
             type="submit"
+            disabled={isLoading}
             className="
             w-full
             py-2.5
@@ -177,9 +212,11 @@ export default function Login() {
             hover:bg-pink-600
             transition
             shadow-lg
+            disabled:opacity-50
+            disabled:cursor-not-allowed
             "
           >
-            Đăng nhập
+            {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
 
         </form>
