@@ -1,8 +1,10 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import { Plus, Edit2, Trash2, Search, Lock, Unlock } from 'lucide-react'
 import { useState } from 'react'
+import { useAuth } from "../../hooks/useAuth"
 
 export default function QuanLyTaiKhoan() {
+  const { user } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [accounts, setAccounts] = useState([
     { id: 1, email: 'giangvien1@example.com', name: 'Trần Văn X', role: 'Giáo viên', status: 'Hoạt động', joined: '01/01/2026' },
@@ -29,11 +31,11 @@ export default function QuanLyTaiKhoan() {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout role="ADMIN">
       {/* Header */}
       <div className="mb-8 flex justify-between items-start">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
             Quản lý tài khoản
           </h1>
           <p className="text-slate-600">Quản lý tài khoản người dùng trong hệ thống</p>

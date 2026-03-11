@@ -1,5 +1,7 @@
 import { LayoutDashboard, BookOpen, FileText, ClipboardList, Users, Settings } from 'lucide-react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { memo } from 'react'
 
 interface NavItem {
   icon: React.ComponentType<any>
@@ -32,14 +34,16 @@ interface SidebarProps {
   role?: string
 }
 
-export default function Sidebar({ role = 'SINH VIÊN' }: SidebarProps) {
+const Sidebar = memo(function Sidebar({ role = 'SINH VIÊN' }: SidebarProps) {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user } = useAuth()
 
-  // User info - có thể lấy từ context/state
+  // User info - lấy từ context
   const userInfo = {
-    name: 'Nguyễn Văn A',
+    name: user?.ho_ten || 'Người dùng',
     role: role,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka'
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.ho_ten || 'user'}`
   }
 
   const navItems: NavItem[] = menuByRole[role as keyof typeof menuByRole] || menuByRole['SINH VIÊN']
@@ -67,10 +71,10 @@ export default function Sidebar({ role = 'SINH VIÊN' }: SidebarProps) {
           const Icon = item.icon
           const isActive = location.pathname.includes(item.href)
           return (
-            <a
+            <button
               key={item.label}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
+              onClick={() => navigate(item.href)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
                 isActive
                   ? 'bg-gradient-to-r from-indigo-600 to-cyan-500 text-white shadow-md'
                   : 'hover:bg-slate-700/50 text-slate-300 group-hover:text-white'
@@ -87,7 +91,7 @@ export default function Sidebar({ role = 'SINH VIÊN' }: SidebarProps) {
               {isActive && (
                 <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
               )}
-            </a>
+            </button>
           )
         })}
       </nav>
@@ -98,4 +102,6 @@ export default function Sidebar({ role = 'SINH VIÊN' }: SidebarProps) {
       </div>
     </aside>
   )
-}
+})
+
+export default Sidebar

@@ -1,8 +1,10 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import { Settings } from 'lucide-react'
 import { useState } from 'react'
+import { useAuth } from "../../hooks/useAuth"
 
 export default function QuanLyHeThong() {
+  const { user } = useAuth()
   const [settings, setSettings] = useState({
     maintenanceMode: false,
     emailNotifications: true,
@@ -18,10 +20,10 @@ export default function QuanLyHeThong() {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout role="ADMIN">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
           Quản lý hệ thống
         </h1>
         <p className="text-slate-600">Cấu hình và quản lý các thiết lập hệ thống</p>

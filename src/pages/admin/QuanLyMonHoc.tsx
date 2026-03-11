@@ -1,8 +1,10 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import { Plus, Edit2, Trash2, Search } from 'lucide-react'
 import { useState } from 'react'
+import { useAuth } from "../../hooks/useAuth"
 
 export default function QuanLyMonHoc() {
+  const { user } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [subjects, setSubjects] = useState([
     { id: 1, name: 'Toán cao cấp 1', code: 'TOAN101', credits: 3, semester: 1, teacher: 'Trần Văn X' },
@@ -21,11 +23,11 @@ export default function QuanLyMonHoc() {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout role="ADMIN">
       {/* Header */}
       <div className="mb-8 flex justify-between items-start">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
             Quản lý môn học
           </h1>
           <p className="text-slate-600">Thêm, sửa, xóa các môn học trong hệ thống</p>

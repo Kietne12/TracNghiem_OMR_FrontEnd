@@ -1,7 +1,9 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import { BarChart3, Award, TrendingUp, Calendar } from 'lucide-react'
+import { useAuth } from "../../hooks/useAuth"
 
 export default function KetQuaThi() {
+  const { user } = useAuth()
   const results = [
     { id: 1, subject: 'Toán cao cấp 1', score: 8.5, maxScore: 10, date: '01/03/2026', status: 'Đạt' },
     { id: 2, subject: 'Vật lý đại cương', score: 7.2, maxScore: 10, date: '28/02/2026', status: 'Đạt' },
@@ -13,10 +15,10 @@ export default function KetQuaThi() {
   const avgScore = (results.reduce((sum, r) => sum + r.score, 0) / results.length).toFixed(1)
 
   return (
-    <DashboardLayout>
+    <DashboardLayout role="SINH VIÊN">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
           Kết quả thi
         </h1>
         <p className="text-slate-600">Xem chi tiết kết quả thi của bạn</p>

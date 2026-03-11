@@ -1,8 +1,10 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import { Plus, BookOpen } from 'lucide-react'
 import { useState } from 'react'
+import { useAuth } from "../../hooks/useAuth"
 
 export default function TaoKyThi() {
+  const { user } = useAuth()
   const [examName, setExamName] = useState('')
   const [duration, setDuration] = useState(60)
   const [totalQuestions, setTotalQuestions] = useState(50)
@@ -20,10 +22,10 @@ export default function TaoKyThi() {
   ]
 
   return (
-    <DashboardLayout>
+    <DashboardLayout role="GIẢNG VIÊN">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
           Tạo kỳ thi mới
         </h1>
         <p className="text-slate-600">Thiết lập đề thi mới cho lớp học của bạn</p>

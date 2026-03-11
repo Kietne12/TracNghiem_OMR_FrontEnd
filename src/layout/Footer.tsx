@@ -1,4 +1,6 @@
-export default function Footer() {
+import { memo } from 'react'
+
+const Footer = memo(function Footer() {
   return (
     <footer className="w-full bg-white border-t border-slate-200 px-8 py-4 flex justify-between items-center text-sm">
       <p className="text-slate-600">© 2026 SmartQuiz - Hệ Thống Thi Trí Tuệ</p>
@@ -9,4 +11,6 @@ export default function Footer() {
       </div>
     </footer>
   )
-}
+})
+
+export default Footer

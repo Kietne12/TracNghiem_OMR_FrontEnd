@@ -1,7 +1,9 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import { BookOpen, CheckCircle, Clock, TrendingUp, Calendar, FileText } from 'lucide-react'
+import { useAuth } from "../../hooks/useAuth"
 
 export default function Dashboard() {
+  const { user } = useAuth()
   const studentInfo = {
     name: 'Nguyễn Văn A',
     studentId: 'SV2026001',
@@ -22,10 +24,10 @@ export default function Dashboard() {
   ]
 
   return (
-    <DashboardLayout>
+    <DashboardLayout role="SINH VIÊN">
       {/* Header Section */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
           Xin chào, {studentInfo.name}!
         </h1>
         <p className="text-slate-600">Chào mừng bạn trở lại SmartQuiz</p>

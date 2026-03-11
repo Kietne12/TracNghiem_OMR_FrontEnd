@@ -18,7 +18,7 @@ export default function DashboardLayout({ children, role = 'SINH VIÊN' }: Dashb
       <div className="flex flex-col flex-1">
         <Header />
 
-        <main className="flex-1 p-8 overflow-auto">
+        <main className="flex-1 p-8 pt-16 overflow-auto scroll-smooth" style={{ scrollPaddingTop: '120px' }}>
           <div className="max-w-7xl">
             {children}
           </div>

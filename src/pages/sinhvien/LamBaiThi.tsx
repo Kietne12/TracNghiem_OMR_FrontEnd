@@ -1,9 +1,10 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import { Clock, CheckCircle } from 'lucide-react'
 import { useState } from 'react'
-
+import { useAuth } from "../../hooks/useAuth"
 
 export default function LamBaiThi() {
+  const { user } = useAuth()
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<number, string>>({})
 
@@ -56,7 +57,7 @@ export default function LamBaiThi() {
   const seconds = exam.timeRemaining % 60
 
   return (
-    <DashboardLayout>
+    <DashboardLayout role="SINH VIÊN">
       {/* Header with timer */}
       <div className="fixed top-0 right-0 left-64 bg-white border-b border-slate-200 p-4 flex justify-between items-center shadow-sm z-10">
         <h1 className="text-xl font-bold text-slate-800">{exam.name}</h1>
@@ -74,7 +75,7 @@ export default function LamBaiThi() {
         </div>
       </div>
 
-      <div className="mt-20 grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="pt-24 grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Main Question Area */}
         <div className="lg:col-span-3 bg-white rounded-lg shadow-sm border border-slate-200 p-8">
           {/* Question Info */}

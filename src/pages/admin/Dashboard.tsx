@@ -1,7 +1,9 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import { Users, FileText, BarChart3, Settings, TrendingUp, AlertCircle } from 'lucide-react'
+import { useAuth } from "../../hooks/useAuth"
 
 export default function AdminDashboard() {
+  const { user } = useAuth()
   const stats = {
     totalUsers: 350,
     teachers: 25,
@@ -19,10 +21,10 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <DashboardLayout>
+    <DashboardLayout role="ADMIN">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
           Bảng điều khiển Admin
         </h1>
         <p className="text-slate-600">Quản lý toàn hệ thống OMR Exam</p>

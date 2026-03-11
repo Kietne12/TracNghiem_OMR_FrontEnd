@@ -1,8 +1,10 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import { Plus, Search, Trash2, Edit2 } from 'lucide-react'
 import { useState } from 'react'
+import { useAuth } from "../../hooks/useAuth"
 
 export default function NganHangCauHoi() {
+  const { user } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
 
@@ -28,11 +30,11 @@ export default function NganHangCauHoi() {
   })
 
   return (
-    <DashboardLayout>
+    <DashboardLayout role="GIẢNG VIÊN">
       {/* Header */}
       <div className="mb-8 flex justify-between items-start">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
             Ngân hàng câu hỏi
           </h1>
           <p className="text-slate-600">Quản lý và tổ chức câu hỏi cho các kỳ thi</p>

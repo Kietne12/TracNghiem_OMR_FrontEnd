@@ -1,7 +1,9 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import { Users, BookOpen, FileText, TrendingUp, Calendar, Clock } from 'lucide-react'
+import { useAuth } from "../../hooks/useAuth"
 
 export default function TeacherDashboard() {
+  const { user } = useAuth()
   const stats = {
     studentsCount: 125,
     examsCreated: 12,
@@ -21,10 +23,10 @@ export default function TeacherDashboard() {
   ]
 
   return (
-    <DashboardLayout>
+    <DashboardLayout role="GIẢNG VIÊN">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
           Xin chào, Giáo viên!
         </h1>
         <p className="text-slate-600">Quản lý các kỳ thi và học sinh của bạn</p>

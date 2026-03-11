@@ -2,6 +2,11 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 
 // Auth Pages
 import Login from "../pages/auth/Login"
+import RoleRedirect from "../pages/RoleRedirect"
+import Unauthorized from "../pages/Unauthorized"
+
+// Components
+import PrivateRoute from "../components/PrivateRoute"
 
 // Student Pages
 import StudentDashboard from "../pages/sinhvien/Dashboard"
@@ -25,25 +30,32 @@ export default function AppRouter() {
     <BrowserRouter>
       <Routes>
         {/* Auth Routes */}
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<RoleRedirect />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* Student Routes */}
-        <Route path="/sinhvien/dashboard" element={<StudentDashboard />} />
-        <Route path="/sinhvien/ketqua" element={<StudentResults />} />
-        <Route path="/sinhvien/lam-bai" element={<StudentExam />} />
+        {/* Student Routes - Protected by PrivateRoute */}
+        <Route element={<PrivateRoute allowedRoles={["sinhvien"]} />}>
+          <Route path="/sinhvien/dashboard" element={<StudentDashboard />} />
+          <Route path="/sinhvien/ketqua" element={<StudentResults />} />
+          <Route path="/sinhvien/lam-bai" element={<StudentExam />} />
+        </Route>
 
-        {/* Teacher Routes */}
-        <Route path="/giangvien/dashboard" element={<TeacherDashboard />} />
-        <Route path="/giangvien/tao-ky-thi" element={<TeacherCreateExam />} />
-        <Route path="/giangvien/cham-bai" element={<TeacherGrade />} />
-        <Route path="/giangvien/ngan-hang-cau-hoi" element={<TeacherQuestionBank />} />
+        {/* Teacher Routes - Protected by PrivateRoute */}
+        <Route element={<PrivateRoute allowedRoles={["giangvien"]} />}>
+          <Route path="/giangvien/dashboard" element={<TeacherDashboard />} />
+          <Route path="/giangvien/tao-ky-thi" element={<TeacherCreateExam />} />
+          <Route path="/giangvien/cham-bai" element={<TeacherGrade />} />
+          <Route path="/giangvien/ngan-hang-cau-hoi" element={<TeacherQuestionBank />} />
+        </Route>
 
-        {/* Admin Routes */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/he-thong" element={<AdminSystem />} />
-        <Route path="/admin/mon-hoc" element={<AdminSubjects />} />
-        <Route path="/admin/tai-khoan" element={<AdminAccounts />} />
+        {/* Admin Routes - Protected by PrivateRoute */}
+        <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/he-thong" element={<AdminSystem />} />
+          <Route path="/admin/mon-hoc" element={<AdminSubjects />} />
+          <Route path="/admin/tai-khoan" element={<AdminAccounts />} />
+        </Route>
 
         {/* Catch all - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />

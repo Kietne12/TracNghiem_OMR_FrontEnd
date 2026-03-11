@@ -1,8 +1,10 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import { CheckCircle, Clock } from 'lucide-react'
 import { useState } from 'react'
+import { useAuth } from "../../hooks/useAuth"
 
 export default function ChamBai() {
+  const { user } = useAuth()
   const [currentExamId, setCurrentExamId] = useState(1)
 
   const exams = [
@@ -21,10 +23,10 @@ export default function ChamBai() {
   const currentExam = exams.find(e => e.id === currentExamId)
 
   return (
-    <DashboardLayout>
+    <DashboardLayout role="GIẢNG VIÊN">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
           Chấm bài thi
         </h1>
         <p className="text-slate-600">Chấm điểm bài thi của học sinh</p>

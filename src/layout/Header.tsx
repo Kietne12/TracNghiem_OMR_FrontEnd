@@ -1,6 +1,22 @@
 import { LogOut, Bell } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
+import { useNavigate } from 'react-router-dom'
+import { memo } from 'react'
 
-export default function Header() {
+const roleName: Record<string, string> = {
+  admin: "Quản trị viên",
+  giangvien: "Giảng viên",
+  sinhvien: "Sinh viên",
+}
+
+const Header = memo(function Header() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login', { replace: true })
+  }
   return (
     <header className="w-full bg-white shadow-sm border-b border-slate-200 px-8 py-4 flex justify-between items-center">
       <div className="flex items-center gap-3">
@@ -23,14 +39,20 @@ export default function Header() {
 
         <div className="flex items-center gap-3 pl-6 border-l border-slate-200">
           <div className="text-right">
-            <p className="text-sm font-medium text-slate-700">User</p>
-            <p className="text-xs text-slate-500">Sinh viên</p>
+            <p className="text-sm font-medium text-slate-700">{user?.ho_ten || 'User'}</p>
+            <p className="text-xs text-slate-500">{roleName[user?.role ?? ""] ?? user?.role}</p>
           </div>
-          <button className="p-2 hover:bg-slate-100 rounded-lg transition" title="Đăng xuất">
+          <button 
+            onClick={handleLogout}
+            className="p-2 hover:bg-slate-100 rounded-lg transition" 
+            title="Đăng xuất"
+          >
             <LogOut size={18} className="text-slate-600" />
           </button>
         </div>
       </div>
     </header>
   )
-}
+})
+
+export default Header
