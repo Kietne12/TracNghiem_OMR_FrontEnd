@@ -3,7 +3,7 @@ export default function Navbar() {
     <div className="h-14 bg-white shadow flex items-center justify-between px-6">
 
       <h1 className="font-semibold text-gray-700">
-        Dashboard
+        SmartQuiz Dashboard
       </h1>
 
       <div className="flex items-center gap-3">

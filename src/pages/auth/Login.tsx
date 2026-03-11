@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { User, Lock, Eye, EyeOff } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 export default function Login() {
 
@@ -7,25 +8,31 @@ export default function Login() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
 
+  const navigate = useNavigate()
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    console.log({
-      email,
-      password
-    })
+    // GIẢ LẬP LOGIN
+    const role = email.includes("gv") ? "giangvien" : "sinhvien"
+
+    if (role === "sinhvien") {
+      navigate("/sinhvien/dashboard")
+    }
+
+    if (role === "giangvien") {
+      navigate("/giangvien/dashboard")
+    }
   }
 
   return (
     <div
       className="min-h-screen w-screen flex items-center justify-center bg-cover bg-center"
-      style={{ backgroundImage: "url('./public/background.png')" }}
+      style={{ backgroundImage: "url('/background.png')" }} 
     >
 
-      {/* overlay tối nhẹ */}
       <div className="absolute inset-0 bg-black/40"></div>
 
-      {/* LOGIN BOX */}
       <div
         className="
         relative
@@ -41,7 +48,6 @@ export default function Login() {
       "
       >
 
-        {/* Title */}
         <div className="text-center mb-8">
 
           <h1 className="text-3xl font-bold">
@@ -56,7 +62,7 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
 
-          {/* Email */}
+          {/* EMAIL */}
           <div>
 
             <label className="text-sm text-gray-200">
@@ -95,7 +101,7 @@ export default function Login() {
 
           </div>
 
-          {/* Password */}
+          {/* PASSWORD */}
           <div>
 
             <label className="text-sm text-gray-200">
@@ -130,11 +136,10 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
               />
 
-              {/* ICON CON MẮT */}
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-2.5 text-gray-300 hover:text-white hover:scale-110 transition"
+                className="absolute right-3 top-2.5 text-gray-300 hover:text-white transition"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -143,7 +148,7 @@ export default function Login() {
 
           </div>
 
-          {/* Remember */}
+          {/* REMEMBER */}
           <div className="flex justify-between text-sm text-gray-200">
 
             <label className="flex items-center gap-2">
@@ -160,7 +165,7 @@ export default function Login() {
 
           </div>
 
-          {/* Button */}
+          {/* BUTTON */}
           <button
             type="submit"
             className="

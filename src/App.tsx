@@ -1,8 +1,9 @@
 import './App.css'
-import Login from './pages/auth/Login'
+// import Login from './pages/auth/Login'
+import AppRouter from './routers/AppRouter'
 
 function App() {
-return <Login />
+  return <AppRouter />
 }
 
 export default App

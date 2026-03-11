@@ -1,22 +1,31 @@
+import Header from "./Header"
 import Sidebar from "./Sidebar"
-import Navbar from "./Navbar"
+import Footer from "./Footer"
 
-export default function DashboardLayout({ children }: any) {
+interface DashboardLayoutProps {
+  children: React.ReactNode
+  role?: string
+}
+
+export default function DashboardLayout({ children, role = 'SINH VIÊN' }: DashboardLayoutProps) {
+
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50">
+      {/* Sidebar */}
+      <Sidebar role={role} />
 
-      <Sidebar />
+      {/* Content */}
+      <div className="flex flex-col flex-1">
+        <Header />
 
-      <div className="flex-1 flex flex-col">
-
-        <Navbar />
-
-        <main className="p-6 overflow-y-auto">
-          {children}
+        <main className="flex-1 p-8 overflow-auto">
+          <div className="max-w-7xl">
+            {children}
+          </div>
         </main>
 
+        <Footer />
       </div>
-
     </div>
   )
 }
