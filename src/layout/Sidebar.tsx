@@ -1,7 +1,8 @@
-import { LayoutDashboard, BookOpen, FileText, ClipboardList, Users, Settings } from 'lucide-react'
+import { LayoutDashboard, BookOpen, FileText, ClipboardList, Users, Settings, Clock, Brain } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { memo } from 'react'
+
 
 interface NavItem {
   icon: React.ComponentType<any>
@@ -12,9 +13,10 @@ interface NavItem {
 // Menu items cho mỗi role - có thể lấy từ context/state
 const menuByRole = {
   'SINH VIÊN': [
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/sinhvien/dashboard' },
-    { icon: FileText, label: 'Làm bài thi', href: '/sinhvien/lam-bai' },
-    { icon: ClipboardList, label: 'Kết quả thi', href: '/sinhvien/ketqua' },
+    { icon: LayoutDashboard, label: 'Trang chủ', href: '/sinhvien/dashboard' },
+    { icon: FileText, label: 'Danh sách kỳ thi', href: '/sinhvien/ky-thi' },
+    { icon: Brain, label: 'Luyện tập', href: '/sinhvien/luyen-tap' },
+    { icon: Clock, label: 'Lịch sử làm bài', href: '/sinhvien/lich-su' },
   ],
   'GIẢNG VIÊN': [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/giangvien/dashboard' },
@@ -74,18 +76,15 @@ const Sidebar = memo(function Sidebar({ role = 'SINH VIÊN' }: SidebarProps) {
             <button
               key={item.label}
               onClick={() => navigate(item.href)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
-                isActive
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${isActive
                   ? 'bg-gradient-to-r from-indigo-600 to-cyan-500 text-white shadow-md'
                   : 'hover:bg-slate-700/50 text-slate-300 group-hover:text-white'
-              }`}
+                }`}
             >
-              <Icon size={20} className={`transition ${
-                isActive ? 'text-white' : 'text-slate-400 group-hover:text-cyan-400'
-              }`} />
-              <span className={`text-sm font-medium ${
-                isActive ? 'text-white font-semibold' : 'group-hover:text-cyan-300'
-              }`}>
+              <Icon size={20} className={`transition ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-cyan-400'
+                }`} />
+              <span className={`text-sm font-medium ${isActive ? 'text-white font-semibold' : 'group-hover:text-cyan-300'
+                }`}>
                 {item.label}
               </span>
               {isActive && (

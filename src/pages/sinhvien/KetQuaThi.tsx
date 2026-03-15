@@ -1,120 +1,145 @@
 import DashboardLayout from "../../layout/DashboardLayout"
-import { BarChart3, Award, TrendingUp, Calendar } from 'lucide-react'
-import { useAuth } from "../../hooks/useAuth"
+import { CheckCircle, XCircle, Award, Clock } from "lucide-react"
+import { useLocation, useNavigate } from "react-router-dom"
 
 export default function KetQuaThi() {
-  const { user } = useAuth()
-  const results = [
-    { id: 1, subject: 'Toán cao cấp 1', score: 8.5, maxScore: 10, date: '01/03/2026', status: 'Đạt' },
-    { id: 2, subject: 'Vật lý đại cương', score: 7.2, maxScore: 10, date: '28/02/2026', status: 'Đạt' },
-    { id: 3, subject: 'Hóa học đại cương', score: 8.1, maxScore: 10, date: '25/02/2026', status: 'Đạt' },
-    { id: 4, subject: 'Tiếng Anh cơ bản', score: 9.0, maxScore: 10, date: '20/02/2026', status: 'Giỏi' },
-    { id: 5, subject: 'Lập trình C++', score: 6.8, maxScore: 10, date: '15/02/2026', status: 'Đạt' },
-  ]
 
-  const avgScore = (results.reduce((sum, r) => sum + r.score, 0) / results.length).toFixed(1)
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const result = location.state || null
+
+  if (!result) {
+    return (
+      <DashboardLayout role="SINH VIÊN">
+        <div className="text-center mt-20">
+
+          <h2 className="text-2xl font-bold text-slate-700">
+            Không có dữ liệu bài thi
+          </h2>
+
+          <button
+            onClick={() => navigate("/sinhvien/ky-thi")}
+            className="mt-6 px-6 py-2 bg-indigo-600 text-white rounded-lg"
+          >
+            Quay lại danh sách kỳ thi
+          </button>
+
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  const wrong = result.total - result.correct
+  const percent = ((result.correct / result.total) * 100).toFixed(0)
+
+  const getRank = () => {
+    const score = Number(result.score)
+
+    if (score >= 8.5) return "Giỏi"
+    if (score >= 7) return "Khá"
+    if (score >= 5) return "Trung bình"
+    return "Chưa đạt"
+  }
+
+  // format thời gian làm bài
+  let timeDisplay = "--"
+
+  if (result.timeUsed !== undefined) {
+
+    const minutes = Math.floor(result.timeUsed / 60)
+    const seconds = result.timeUsed % 60
+
+    timeDisplay = `${minutes}p ${seconds}s`
+  }
 
   return (
     <DashboardLayout role="SINH VIÊN">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
-          Kết quả thi
-        </h1>
-        <p className="text-slate-600">Xem chi tiết kết quả thi của bạn</p>
+
+      <div className="max-w-4xl mx-auto">
+
+        {/* Header */}
+        <div className="text-center mb-10">
+
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
+            Kết quả bài thi
+          </h1>
+
+          <p className="text-slate-600">
+            {result.examName}
+          </p>
+
+        </div>
+
+        {/* Score Card */}
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-10 text-center mb-8">
+
+          <div className="text-6xl font-bold text-indigo-600 mb-4">
+            {result.score}/10
+          </div>
+
+          <p className="text-slate-600 text-lg">
+            Điểm số
+          </p>
+
+          <p className="text-sm text-slate-500 mt-2">
+            Xếp loại: <span className="font-semibold">{getRank()}</span>
+          </p>
+
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
+
+          <div className="bg-white p-6 rounded-lg border shadow-sm text-center">
+            <CheckCircle className="mx-auto text-green-500 mb-2" size={28} />
+            <p className="text-2xl font-bold">{result.correct}</p>
+            <p className="text-sm text-slate-500">Câu đúng</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border shadow-sm text-center">
+            <XCircle className="mx-auto text-red-500 mb-2" size={28} />
+            <p className="text-2xl font-bold">{wrong}</p>
+            <p className="text-sm text-slate-500">Câu sai</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border shadow-sm text-center">
+            <Award className="mx-auto text-indigo-500 mb-2" size={28} />
+            <p className="text-2xl font-bold">{percent}%</p>
+            <p className="text-sm text-slate-500">Tỷ lệ đúng</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border shadow-sm text-center">
+            <Clock className="mx-auto text-cyan-500 mb-2" size={28} />
+            <p className="text-2xl font-bold">
+              {timeDisplay}
+            </p>
+            <p className="text-sm text-slate-500">Thời gian</p>
+          </div>
+
+        </div>
+
+        {/* Buttons */}
+        <div className="flex justify-center gap-4">
+
+          <button
+            onClick={() => navigate("/sinhvien/ky-thi")}
+            className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium"
+          >
+            Quay lại danh sách kỳ thi
+          </button>
+
+          <button
+            onClick={() => navigate("/sinhvien/dashboard")}
+            className="px-6 py-2 border border-slate-300 hover:bg-slate-100 rounded-lg"
+          >
+            Về trang chủ
+          </button>
+
+        </div>
+
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-600 text-sm mb-1">Điểm trung bình</p>
-              <p className="text-3xl font-bold text-indigo-600">{avgScore}</p>
-            </div>
-            <TrendingUp size={32} className="text-indigo-200" />
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-600 text-sm mb-1">Số bài thi</p>
-              <p className="text-3xl font-bold text-cyan-600">{results.length}</p>
-            </div>
-            <BarChart3 size={32} className="text-cyan-200" />
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-600 text-sm mb-1">Bài đạt</p>
-              <p className="text-3xl font-bold text-green-600">{results.filter(r => r.score >= 5).length}</p>
-            </div>
-            <Award size={32} className="text-green-200" />
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-600 text-sm mb-1">Tỉ lệ đạt</p>
-              <p className="text-3xl font-bold text-emerald-600">
-                {((results.filter(r => r.score >= 5).length / results.length) * 100).toFixed(0)}%
-              </p>
-            </div>
-            <Calendar size={32} className="text-emerald-200" />
-          </div>
-        </div>
-      </div>
-
-      {/* Results Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-        <h2 className="text-xl font-bold text-slate-800 mb-6">Chi tiết kết quả</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-200">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Môn thi</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Ngày thi</th>
-                <th className="text-center py-3 px-4 text-sm font-semibold text-slate-700">Điểm</th>
-                <th className="text-center py-3 px-4 text-sm font-semibold text-slate-700">Xếp loại</th>
-                <th className="text-center py-3 px-4 text-sm font-semibold text-slate-700">Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {results.map((result) => (
-                <tr key={result.id} className="border-b border-slate-100 hover:bg-slate-50 transition">
-                  <td className="py-3 px-4 text-slate-800 font-medium">{result.subject}</td>
-                  <td className="py-3 px-4 text-slate-600">{result.date}</td>
-                  <td className="py-3 px-4 text-center">
-                    <span className="font-bold text-lg text-indigo-600">
-                      {result.score}/{result.maxScore}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    {result.score >= 8.5 && (
-                      <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">Giỏi</span>
-                    )}
-                    {result.score >= 7 && result.score < 8.5 && (
-                      <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">Khá</span>
-                    )}
-                    {result.score >= 5 && result.score < 7 && (
-                      <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium">Trung bình</span>
-                    )}
-                    {result.score < 5 && (
-                      <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium">Chưa đạt</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    <button className="text-indigo-600 hover:text-indigo-700 font-medium text-sm">
-                      Xem chi tiết
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </DashboardLayout>
   )
 }

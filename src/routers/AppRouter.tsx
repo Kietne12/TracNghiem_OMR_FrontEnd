@@ -10,8 +10,12 @@ import PrivateRoute from "../components/PrivateRoute"
 
 // Student Pages
 import StudentDashboard from "../pages/sinhvien/Dashboard"
+import StudentExamList from "../pages/sinhvien/DanhSachKyThi"
 import StudentResults from "../pages/sinhvien/KetQuaThi"
 import StudentExam from "../pages/sinhvien/LamBaiThi"
+import LichSuLamBai from "../pages/sinhvien/LichSuLamBai"
+import LuyenTap from "../pages/sinhvien/LuyenTap"
+import ChiTietBaiThi from "../pages/sinhvien/ChiTietBaiThi"
 
 // Teacher Pages
 import TeacherDashboard from "../pages/giangvien/Dashboard"
@@ -37,8 +41,12 @@ export default function AppRouter() {
         {/* Student Routes - Protected by PrivateRoute */}
         <Route element={<PrivateRoute allowedRoles={["sinhvien"]} />}>
           <Route path="/sinhvien/dashboard" element={<StudentDashboard />} />
+          <Route path="/sinhvien/ky-thi" element={<StudentExamList />} />
           <Route path="/sinhvien/ketqua" element={<StudentResults />} />
-          <Route path="/sinhvien/lam-bai" element={<StudentExam />} />
+          <Route path="/sinhvien/lam-bai/:examId" element={<StudentExam />} />
+          <Route path="/sinhvien/lich-su" element={<LichSuLamBai />} />
+          <Route path="/sinhvien/luyen-tap" element={<LuyenTap />} />
+          <Route path="/sinhvien/chitiet-baithi/:id" element={<ChiTietBaiThi />} />
         </Route>
 
         {/* Teacher Routes - Protected by PrivateRoute */}
