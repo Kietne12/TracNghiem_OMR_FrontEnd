@@ -28,18 +28,24 @@ import AdminDashboard from "../pages/admin/Dashboard"
 import AdminSystem from "../pages/admin/QuanLyHeThong"
 import AdminSubjects from "../pages/admin/QuanLyMonHoc"
 import AdminAccounts from "../pages/admin/QuanLyTaiKhoan"
+import TaoTaiKhoan from "../pages/admin/TaoTaiKhoan"
+import SuaTaiKhoan from "../pages/admin/SuaTaiKhoan"
+import ThemMonHoc from "../pages/admin/ThemMonHoc"
+import SuaMonHoc from "../pages/admin/SuaMonHoc"
 
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+
         {/* Auth Routes */}
         <Route path="/" element={<RoleRedirect />} />
         <Route path="/login" element={<Login />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* Student Routes - Protected by PrivateRoute */}
+        {/* Student Routes */}
         <Route element={<PrivateRoute allowedRoles={["sinhvien"]} />}>
+
           <Route path="/sinhvien/dashboard" element={<StudentDashboard />} />
           <Route path="/sinhvien/ky-thi" element={<StudentExamList />} />
           <Route path="/sinhvien/ketqua" element={<StudentResults />} />
@@ -47,26 +53,42 @@ export default function AppRouter() {
           <Route path="/sinhvien/lich-su" element={<LichSuLamBai />} />
           <Route path="/sinhvien/luyen-tap" element={<LuyenTap />} />
           <Route path="/sinhvien/chitiet-baithi/:id" element={<ChiTietBaiThi />} />
+
         </Route>
 
-        {/* Teacher Routes - Protected by PrivateRoute */}
+        {/* Teacher Routes */}
         <Route element={<PrivateRoute allowedRoles={["giangvien"]} />}>
+
           <Route path="/giangvien/dashboard" element={<TeacherDashboard />} />
           <Route path="/giangvien/tao-ky-thi" element={<TeacherCreateExam />} />
           <Route path="/giangvien/cham-bai" element={<TeacherGrade />} />
           <Route path="/giangvien/ngan-hang-cau-hoi" element={<TeacherQuestionBank />} />
+
         </Route>
 
-        {/* Admin Routes - Protected by PrivateRoute */}
+        {/* Admin Routes */}
         <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
+
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/he-thong" element={<AdminSystem />} />
-          <Route path="/admin/mon-hoc" element={<AdminSubjects />} />
-          <Route path="/admin/tai-khoan" element={<AdminAccounts />} />
+
+          {/* System */}
+          <Route path="/admin/system" element={<AdminSystem />} />
+
+          {/* Subjects */}
+          <Route path="/admin/subjects" element={<AdminSubjects />} />
+          <Route path="/admin/subjects/create" element={<ThemMonHoc />} />
+          <Route path="/admin/subjects/edit/:id" element={<SuaMonHoc />} />
+
+          {/* Accounts */}
+          <Route path="/admin/accounts" element={<AdminAccounts />} />
+          <Route path="/admin/accounts/create" element={<TaoTaiKhoan />} />
+          <Route path="/admin/accounts/edit/:id" element={<SuaTaiKhoan />} />
+
         </Route>
 
-        {/* Catch all - redirect to home */}
+        {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
+
       </Routes>
     </BrowserRouter>
   )
