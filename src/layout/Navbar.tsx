@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "../hooks/useAuth"
 
 export default function Navbar() {
-  const { user, logout } = useAuth()
+  const { account, logout } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -20,7 +20,7 @@ export default function Navbar() {
       <div className="flex items-center gap-3">
 
         <span className="text-sm text-gray-600">
-          {user?.ho_ten ?? "User"}
+          {account?.ho_ten ?? "User"}
         </span>
 
         <button

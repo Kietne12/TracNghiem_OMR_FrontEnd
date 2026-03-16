@@ -10,7 +10,7 @@ const roleName: Record<string, string> = {
 }
 
 const Header = memo(function Header() {
-  const { user, logout } = useAuth()
+  const { account, logout } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -39,8 +39,8 @@ const Header = memo(function Header() {
 
         <div className="flex items-center gap-3 pl-6 border-l border-slate-200">
           <div className="text-right">
-            <p className="text-sm font-medium text-slate-700">{user?.ho_ten || 'User'}</p>
-            <p className="text-xs text-slate-500">{roleName[user?.role ?? ""] ?? user?.role}</p>
+            <p className="text-sm font-medium text-slate-700">{account?.ho_ten || 'User'}</p>
+            <p className="text-xs text-slate-500">{roleName[account?.role ?? ""] ?? account?.role}</p>
           </div>
           <button 
             onClick={handleLogout}

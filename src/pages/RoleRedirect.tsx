@@ -7,12 +7,12 @@ import { useAuth } from "../hooks/useAuth";
  * Sử dụng cho route "/" (trang chủ)
  */
 export default function RoleRedirect() {
-  const { user, loading } = useAuth();
+  const { account, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading) {
-      if (!user) {
+      if (!account) {
         // Chưa đăng nhập → về login
         navigate("/login", { replace: true });
       } else {
@@ -22,10 +22,10 @@ export default function RoleRedirect() {
           giangvien: "/giangvien/dashboard",
           sinhvien: "/sinhvien/dashboard",
         };
-        navigate(roleRoutes[user.role] || "/login", { replace: true });
+        navigate(roleRoutes[account.role] || "/login", { replace: true });
       }
     }
-  }, [user, loading, navigate]);
+  }, [account, loading, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

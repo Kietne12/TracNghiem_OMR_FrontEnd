@@ -18,6 +18,9 @@ import TeacherDashboard from "../pages/giangvien/Dashboard"
 import TeacherCreateExam from "../pages/giangvien/TaoKyThi"
 import TeacherGrade from "../pages/giangvien/ChamBai"
 import TeacherQuestionBank from "../pages/giangvien/NganHangCauHoi"
+import TeacherPracticeAssignment from "../pages/giangvien/TaoBaiLuyenTap"
+import TeacherStatistics from "../pages/giangvien/ThongKeDiemThi"
+import TeacherAttemptHistory from "../pages/giangvien/LichSuLamBai"
 
 // Admin Pages
 import AdminDashboard from "../pages/admin/Dashboard"
@@ -47,6 +50,9 @@ export default function AppRouter() {
           <Route path="/giangvien/tao-ky-thi" element={<TeacherCreateExam />} />
           <Route path="/giangvien/cham-bai" element={<TeacherGrade />} />
           <Route path="/giangvien/ngan-hang-cau-hoi" element={<TeacherQuestionBank />} />
+          <Route path="/giangvien/tao-bai-luyen-tap" element={<TeacherPracticeAssignment />} />
+          <Route path="/giangvien/thong-ke-diem-thi" element={<TeacherStatistics />} />
+          <Route path="/giangvien/lich-su-lam-bai" element={<TeacherAttemptHistory />} />
         </Route>
 
         {/* Admin Routes - Protected by PrivateRoute */}

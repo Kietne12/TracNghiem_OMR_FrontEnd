@@ -3,7 +3,7 @@ import { BookOpen, CheckCircle, Clock, TrendingUp, Calendar, FileText } from 'lu
 import { useAuth } from "../../hooks/useAuth"
 
 export default function Dashboard() {
-  const { user } = useAuth()
+  const { account } = useAuth()
   const studentInfo = {
     name: 'Nguyễn Văn A',
     studentId: 'SV2026001',

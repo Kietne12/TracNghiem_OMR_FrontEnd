@@ -1,52 +1,54 @@
 import api from "./api";
 
-export interface User {
+export interface Account {
   id: number;
+  user_id: number;
+  username: string;
+  password: string;
   ho_ten: string;
   email: string;
-  mssv: string | null;
   role: "admin" | "giangvien" | "sinhvien";
 }
 
 export interface LoginResponse {
   message: string;
   token: string;
-  user: User;
+  account: Account;
 }
 
 export const authService = {
-  async login(email: string, password: string): Promise<LoginResponse> {
+  async login(username: string, password: string): Promise<LoginResponse> {
     const res = await api.post<LoginResponse>("/api/auth/login", {
-      email,
+      username,
       password,
     });
     return res.data;
   },
 
-  async getMe(): Promise<User> {
-    const res = await api.get<{ user: User }>("/api/auth/me");
-    return res.data.user;
+  async getMe(): Promise<Account> {
+    const res = await api.get<{ account: Account }>("/api/auth/me");
+    return res.data.account;
   },
 
-  saveAuth(token: string, user: User) {
+  saveAuth(token: string, account: Account) {
     localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("account", JSON.stringify(account));
   },
 
   logout() {
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    localStorage.removeItem("account");
   },
 
   getToken(): string | null {
     return localStorage.getItem("token");
   },
 
-  getSavedUser(): User | null {
-    const raw = localStorage.getItem("user");
+  getSavedAccount(): Account | null {
+    const raw = localStorage.getItem("account");
     if (!raw) return null;
     try {
-      return JSON.parse(raw) as User;
+      return JSON.parse(raw) as Account;
     } catch {
       return null;
     }

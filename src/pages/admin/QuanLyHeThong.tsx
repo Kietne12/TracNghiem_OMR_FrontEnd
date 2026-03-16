@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useAuth } from "../../hooks/useAuth"
 
 export default function QuanLyHeThong() {
-  const { user } = useAuth()
   const [settings, setSettings] = useState({
     maintenanceMode: false,
     emailNotifications: true,

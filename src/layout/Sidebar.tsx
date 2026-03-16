@@ -20,7 +20,10 @@ const menuByRole = {
     { icon: LayoutDashboard, label: 'Dashboard', href: '/giangvien/dashboard' },
     { icon: BookOpen, label: 'Ngân hàng câu hỏi', href: '/giangvien/ngan-hang-cau-hoi' },
     { icon: FileText, label: 'Tạo kỳ thi', href: '/giangvien/tao-ky-thi' },
-    { icon: ClipboardList, label: 'Chấm bài', href: '/giangvien/cham-bai' },
+    { icon: ClipboardList, label: 'Xem kết quả thi', href: '/giangvien/cham-bai' },
+    { icon: BookOpen, label: 'Tạo bài luyện tập', href: '/giangvien/tao-bai-luyen-tap' },
+    { icon: FileText, label: 'Thống kê điểm thi', href: '/giangvien/thong-ke-diem-thi' },
+    { icon: ClipboardList, label: 'Lịch sử làm bài', href: '/giangvien/lich-su-lam-bai' },
   ],
   'ADMIN': [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard' },
@@ -37,13 +40,13 @@ interface SidebarProps {
 const Sidebar = memo(function Sidebar({ role = 'SINH VIÊN' }: SidebarProps) {
   const location = useLocation()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { account } = useAuth()
 
   // User info - lấy từ context
   const userInfo = {
-    name: user?.ho_ten || 'Người dùng',
+    name: account?.ho_ten || 'Người dùng',
     role: role,
-    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.ho_ten || 'user'}`
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${account?.ho_ten || 'user'}`
   }
 
   const navItems: NavItem[] = menuByRole[role as keyof typeof menuByRole] || menuByRole['SINH VIÊN']

@@ -3,7 +3,6 @@ import { BarChart3, Award, TrendingUp, Calendar } from 'lucide-react'
 import { useAuth } from "../../hooks/useAuth"
 
 export default function KetQuaThi() {
-  const { user } = useAuth()
   const results = [
     { id: 1, subject: 'Toán cao cấp 1', score: 8.5, maxScore: 10, date: '01/03/2026', status: 'Đạt' },
     { id: 2, subject: 'Vật lý đại cương', score: 7.2, maxScore: 10, date: '28/02/2026', status: 'Đạt' },

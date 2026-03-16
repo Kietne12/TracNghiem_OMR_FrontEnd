@@ -8,7 +8,7 @@ import AlertMessage from "../../components/AlertMessage"
 
 export default function Login() {
 
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -22,14 +22,14 @@ export default function Login() {
 
     setErrorMsg("")
 
-    if (!email || !password) {
-      setErrorMsg("Vui lòng nhập email và mật khẩu")
+    if (!username || !password) {
+      setErrorMsg("Vui lòng nhập username và mật khẩu")
       return
     }
 
     setIsLoading(true)
     try {
-      const user = await login(email, password)
+      const user = await login(username, password)
       toast.success("Đăng nhập thành công!")
 
       // Redirect theo role
@@ -99,7 +99,7 @@ export default function Login() {
           <div>
 
             <label className="text-sm text-gray-200">
-              Email / MSSV
+              Username
             </label>
 
             <div className="relative mt-2">
@@ -111,7 +111,7 @@ export default function Login() {
 
               <input
                 type="text"
-                placeholder="Nhập email hoặc MSSV"
+                placeholder="Nhập username"
                 className="
                 w-full
                 pl-10
@@ -126,8 +126,8 @@ export default function Login() {
                 focus:ring-2
                 focus:ring-indigo-400
                 "
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
 
             </div>

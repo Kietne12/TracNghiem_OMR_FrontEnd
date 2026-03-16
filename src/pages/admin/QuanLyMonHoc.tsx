@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useAuth } from "../../hooks/useAuth"
 
 export default function QuanLyMonHoc() {
-  const { user } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [subjects, setSubjects] = useState([
     { id: 1, name: 'Toán cao cấp 1', code: 'TOAN101', credits: 3, semester: 1, teacher: 'Trần Văn X' },

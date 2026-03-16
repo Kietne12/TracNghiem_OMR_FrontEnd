@@ -4,18 +4,18 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { authService, type User } from "../services/authService";
+import { authService, type Account } from "../services/authService";
 import { AuthContext } from "./authContextDef";
 
 export interface AuthContextType {
-  user: User | null;
+  account: Account | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<User>;
+  login: (username: string, password: string) => Promise<Account>;
   logout: () => void;
 }
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [account, setAccount] = useState<Account | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Khi app load → kiểm tra token đã lưu
@@ -24,10 +24,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       if (authService.isAuthenticated()) {
         try {
           const me = await authService.getMe();
-          setUser(me);
+          setAccount(me);
         } catch {
           authService.logout();
-          setUser(null);
+          setAccount(null);
         }
       }
       setLoading(false);
@@ -39,7 +39,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "token" && !e.newValue) {
-        setUser(null);
+        setAccount(null);
       }
     };
     window.addEventListener("storage", handleStorageChange);
@@ -49,28 +49,28 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   // Khi user quay lại tab → kiểm tra token còn không (bắt trường hợp xóa trong DevTools)
   useEffect(() => {
     const handleVisibility = () => {
-      if (document.visibilityState === "visible" && user && !authService.isAuthenticated()) {
-        setUser(null);
+      if (document.visibilityState === "visible" && account && !authService.isAuthenticated()) {
+        setAccount(null);
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [user]);
+  }, [account]);
 
-  const login = useCallback(async (email: string, password: string): Promise<User> => {
-    const data = await authService.login(email, password);
-    authService.saveAuth(data.token, data.user);
-    setUser(data.user);
-    return data.user;
+  const login = useCallback(async (username: string, password: string): Promise<Account> => {
+    const data = await authService.login(username, password);
+    authService.saveAuth(data.token, data.account);
+    setAccount(data.account);
+    return data.account;
   }, []);
 
   const logout = useCallback(() => {
     authService.logout();
-    setUser(null);
+    setAccount(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ account, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

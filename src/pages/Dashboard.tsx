@@ -7,18 +7,18 @@ const roleName: Record<string, string> = {
 };
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { account } = useAuth();
 
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        Xin chào, {user?.ho_ten}!
+        Xin chào, {account?.ho_ten}!
       </h2>
       <p className="text-gray-600">
-        Vai trò: <span className="font-medium">{roleName[user?.role ?? ""] ?? user?.role}</span>
+        Vai trò: <span className="font-medium">{roleName[account?.role ?? ""] ?? account?.role}</span>
       </p>
       <p className="text-gray-600">
-        Email: <span className="font-medium">{user?.email}</span>
+        Email: <span className="font-medium">{account?.email}</span>
       </p>
     </div>
   );

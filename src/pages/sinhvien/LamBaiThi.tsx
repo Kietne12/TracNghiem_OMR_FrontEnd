@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useAuth } from "../../hooks/useAuth"
 
 export default function LamBaiThi() {
-  const { user } = useAuth()
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<number, string>>({})
 

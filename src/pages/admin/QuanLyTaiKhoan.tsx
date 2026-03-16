@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useAuth } from "../../hooks/useAuth"
 
 export default function QuanLyTaiKhoan() {
-  const { user } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [accounts, setAccounts] = useState([
     { id: 1, email: 'giangvien1@example.com', name: 'Trần Văn X', role: 'Giáo viên', status: 'Hoạt động', joined: '01/01/2026' },

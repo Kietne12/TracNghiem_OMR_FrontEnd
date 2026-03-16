@@ -1,9 +1,9 @@
 import DashboardLayout from "../../layout/DashboardLayout"
-import { Users, BookOpen, FileText, TrendingUp, Calendar, Clock } from 'lucide-react'
+import { Users, BookOpen, FileText, Calendar } from 'lucide-react'
 import { useAuth } from "../../hooks/useAuth"
 
 export default function TeacherDashboard() {
-  const { user } = useAuth()
+  const { account } = useAuth()
   const stats = {
     studentsCount: 125,
     examsCreated: 12,
@@ -17,11 +17,6 @@ export default function TeacherDashboard() {
     { id: 3, name: 'Hóa học - Quiz 1', date: '10/03/2026', submissions: 50, graded: 50 },
   ]
 
-  const pendingGrading = [
-    { id: 1, exam: 'Lập trình C++ - Bài kiểm tra', date: '16/03/2026', count: 3 },
-    { id: 2, exam: 'Tiếng Anh - Listening', date: '14/03/2026', count: 5 },
-  ]
-
   return (
     <DashboardLayout role="GIẢNG VIÊN">
       {/* Header */}
@@ -33,7 +28,7 @@ export default function TeacherDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div>
@@ -59,15 +54,6 @@ export default function TeacherDashboard() {
               <p className="text-3xl font-bold text-green-600">{stats.questionsBank}</p>
             </div>
             <BookOpen size={32} className="text-green-200" />
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-600 text-sm mb-1">Điểm trung bình lớp</p>
-              <p className="text-3xl font-bold text-emerald-600">{stats.avgClassScore}</p>
-            </div>
-            <TrendingUp size={32} className="text-emerald-200" />
           </div>
         </div>
       </div>
@@ -99,37 +85,6 @@ export default function TeacherDashboard() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* Pending Grading */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Clock size={24} className="text-red-600" />
-            <h2 className="text-xl font-bold text-slate-800">Chờ chấm điểm</h2>
-          </div>
-          <div className="space-y-4">
-            {pendingGrading.length > 0 ? (
-              pendingGrading.map((item) => (
-                <div
-                  key={item.id}
-                  className="border-l-4 border-red-500 bg-red-50 rounded-lg p-4 hover:bg-red-100 transition cursor-pointer"
-                >
-                  <h3 className="font-semibold text-slate-800 mb-1">{item.exam}</h3>
-                  <p className="text-sm text-slate-600 mb-3">{item.date}</p>
-                  <div className="flex justify-between items-center">
-                    <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium">
-                      {item.count} bài chờ
-                    </span>
-                    <button className="text-red-600 hover:text-red-700 font-medium text-sm">
-                      Chấm ngay →
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-slate-500 text-center py-8">Không có bài chờ chấm</p>
-            )}
           </div>
         </div>
       </div>

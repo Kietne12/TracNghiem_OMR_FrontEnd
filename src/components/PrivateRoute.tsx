@@ -6,7 +6,7 @@ interface PrivateRouteProps {
 }
 
 export default function PrivateRoute({ allowedRoles }: PrivateRouteProps) {
-  const { user, loading } = useAuth();
+  const { account, loading } = useAuth();
 
   if (loading) {
     return (
@@ -17,10 +17,10 @@ export default function PrivateRoute({ allowedRoles }: PrivateRouteProps) {
   }
 
   // Chưa đăng nhập → về login
-  if (!user) return <Navigate to="/login" replace />;
+  if (!account) return <Navigate to="/login" replace />;
 
-  // Có giới hạn role nhưng user không thuộc role cho phép → về trang không có quyền
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  // Có giới hạn role nhưng account không thuộc role cho phép → về trang không có quyền
+  if (allowedRoles && !allowedRoles.includes(account.role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 

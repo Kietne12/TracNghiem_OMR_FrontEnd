@@ -3,7 +3,7 @@ import { Users, FileText, BarChart3, Settings, TrendingUp, AlertCircle } from 'l
 import { useAuth } from "../../hooks/useAuth"
 
 export default function AdminDashboard() {
-  const { user } = useAuth()
+  const { account } = useAuth()
   const stats = {
     totalUsers: 350,
     teachers: 25,
