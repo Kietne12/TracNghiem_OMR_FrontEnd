@@ -1,7 +1,7 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save, RefreshCcw, CheckCircle } from "lucide-react"
+import { ArrowLeft, Save, RefreshCcw, CheckCircle, Upload } from "lucide-react"
 
 export default function SuaTaiKhoan() {
 
@@ -15,7 +15,8 @@ export default function SuaTaiKhoan() {
         email: "sv001@example.com",
         password: "",
         role: "Sinh viên",
-        status: "Hoạt động"
+        status: "Hoạt động",
+        avatar: ""
     })
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,6 +24,20 @@ export default function SuaTaiKhoan() {
             ...formData,
             [e.target.name]: e.target.value
         })
+    }
+
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+        const file = e.target.files?.[0]
+
+        if (file) {
+            const imageUrl = URL.createObjectURL(file)
+
+            setFormData({
+                ...formData,
+                avatar: imageUrl
+            })
+        }
     }
 
     const handleRoleChange = (role: string) => {
@@ -109,18 +124,28 @@ export default function SuaTaiKhoan() {
 
                     <form onSubmit={handleSubmit} className="space-y-7">
 
-                        {/* Avatar */}
-                        <div className="flex items-center gap-4">
+                        {/* Avatar Upload */}
+                        <div className="flex items-center gap-6">
 
                             <img
-                                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name}`}
+                                src={
+                                    formData.avatar ||
+                                    `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name}`
+                                }
                                 alt="avatar"
-                                className="w-16 h-16 rounded-full border"
+                                className="w-20 h-20 rounded-full border object-cover"
                             />
 
-                            <div className="text-sm text-slate-500">
-                                Avatar được tạo theo tên người dùng
-                            </div>
+                            <label className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer text-sm">
+                                <Upload size={16} />
+                                Thay ảnh
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleAvatarChange}
+                                    className="hidden"
+                                />
+                            </label>
 
                         </div>
 
@@ -218,7 +243,7 @@ export default function SuaTaiKhoan() {
                                             type="button"
                                             onClick={() => handleRoleChange(role)}
                                             className={`border rounded-xl py-3 text-sm font-semibold transition
-                      ${active
+                                            ${active
                                                     ? "border-indigo-500 bg-indigo-50 text-indigo-700"
                                                     : "border-slate-300 hover:border-indigo-400"
                                                 }`}
@@ -252,7 +277,7 @@ export default function SuaTaiKhoan() {
                                             type="button"
                                             onClick={() => handleStatusChange(status)}
                                             className={`border rounded-xl py-3 text-sm font-semibold transition
-                      ${active
+                                            ${active
                                                     ? "border-indigo-500 bg-indigo-50 text-indigo-700"
                                                     : "border-slate-300 hover:border-indigo-400"
                                                 }`}

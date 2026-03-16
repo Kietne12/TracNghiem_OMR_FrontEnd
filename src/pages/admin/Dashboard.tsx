@@ -1,11 +1,7 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import {
   Users,
-  FileText,
-  BarChart3,
-  Settings,
-  TrendingUp,
-  AlertCircle
+  FileText
 } from "lucide-react"
 
 export default function AdminDashboard() {
@@ -13,10 +9,7 @@ export default function AdminDashboard() {
   const stats = {
     totalUsers: 350,
     teachers: 25,
-    students: 325,
-    exams: 48,
-    avgScore: 7.2,
-    systemHealth: 98
+    students: 325
   }
 
   const recentActivities = [
@@ -49,7 +42,7 @@ export default function AdminDashboard() {
 
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 
         <StatCard
           icon={<Users size={20} />}
@@ -72,27 +65,6 @@ export default function AdminDashboard() {
           color="green"
         />
 
-        <StatCard
-          icon={<BarChart3 size={20} />}
-          label="Kỳ thi"
-          value={stats.exams}
-          color="orange"
-        />
-
-        <StatCard
-          icon={<TrendingUp size={20} />}
-          label="Điểm TB"
-          value={stats.avgScore}
-          color="emerald"
-        />
-
-        <StatCard
-          icon={<Settings size={20} />}
-          label="System Health"
-          value={`${stats.systemHealth}%`}
-          color="purple"
-        />
-
       </div>
 
 
@@ -111,27 +83,7 @@ export default function AdminDashboard() {
 
             <StatusRow name="Database" status="ok" />
             <StatusRow name="API Server" status="ok" />
-            <StatusRow name="Email Service" status="warning" />
             <StatusRow name="Storage" status="ok" />
-
-          </div>
-
-
-          {/* Health Bar */}
-          <div className="mt-6">
-
-            <p className="text-sm text-slate-600 mb-2">
-              System Health
-            </p>
-
-            <div className="w-full bg-slate-200 rounded-full h-3">
-
-              <div
-                className="bg-green-500 h-3 rounded-full"
-                style={{ width: `${stats.systemHealth}%` }}
-              />
-
-            </div>
 
           </div>
 
@@ -184,26 +136,6 @@ export default function AdminDashboard() {
 
       </div>
 
-
-      {/* Alert */}
-      <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-2xl p-6 flex gap-4">
-
-        <AlertCircle size={24} className="text-yellow-600 flex-shrink-0 mt-1" />
-
-        <div>
-
-          <h3 className="font-semibold text-yellow-900 mb-1">
-            Cảnh báo hệ thống
-          </h3>
-
-          <p className="text-sm text-yellow-800">
-            Dịch vụ Email có độ trễ cao. Vui lòng kiểm tra cấu hình mail server trong 24 giờ tới.
-          </p>
-
-        </div>
-
-      </div>
-
     </DashboardLayout>
 
   )
@@ -218,9 +150,6 @@ function StatCard({ icon, label, value, color }: any) {
     indigo: "text-indigo-600 bg-indigo-100",
     cyan: "text-cyan-600 bg-cyan-100",
     green: "text-green-600 bg-green-100",
-    orange: "text-orange-600 bg-orange-100",
-    emerald: "text-emerald-600 bg-emerald-100",
-    purple: "text-purple-600 bg-purple-100"
   }
 
   return (
@@ -258,11 +187,6 @@ function StatusRow({ name, status }: any) {
       dot: "bg-green-500",
       text: "Hoạt động",
       color: "text-green-600"
-    },
-    warning: {
-      dot: "bg-yellow-500",
-      text: "Cảnh báo",
-      color: "text-yellow-600"
     }
   }
 

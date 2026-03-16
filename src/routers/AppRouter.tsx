@@ -11,11 +11,16 @@ import PrivateRoute from "../components/PrivateRoute"
 // Student Pages
 import StudentDashboard from "../pages/sinhvien/Dashboard"
 import StudentExamList from "../pages/sinhvien/DanhSachKyThi"
+import DanhSachBaiThi from "../pages/sinhvien/DanhSachBaiThi"
 import StudentResults from "../pages/sinhvien/KetQuaThi"
 import StudentExam from "../pages/sinhvien/LamBaiThi"
 import LichSuLamBai from "../pages/sinhvien/LichSuLamBai"
 import LuyenTap from "../pages/sinhvien/LuyenTap"
 import ChiTietBaiThi from "../pages/sinhvien/ChiTietBaiThi"
+import DanhSachBaiLuyenTap from "../pages/sinhvien/DanhSachBaiLuyenTap"
+import LamBaiLuyenTap from "../pages/sinhvien/LamBaiLuyenTap"
+import KetQuaLuyenTap from "../pages/sinhvien/KetQuaLuyenTap"
+
 
 // Teacher Pages
 import TeacherDashboard from "../pages/giangvien/Dashboard"
@@ -47,12 +52,23 @@ export default function AppRouter() {
         <Route element={<PrivateRoute allowedRoles={["sinhvien"]} />}>
 
           <Route path="/sinhvien/dashboard" element={<StudentDashboard />} />
+
+          {/* Danh sách môn thi */}
           <Route path="/sinhvien/ky-thi" element={<StudentExamList />} />
+
+          {/* Danh sách bài thi của môn */}
+          <Route path="/sinhvien/ky-thi/:subjectId" element={<DanhSachBaiThi />} />
           <Route path="/sinhvien/ketqua" element={<StudentResults />} />
           <Route path="/sinhvien/lam-bai/:examId" element={<StudentExam />} />
           <Route path="/sinhvien/lich-su" element={<LichSuLamBai />} />
+
+          {/* Luyện tập */}
           <Route path="/sinhvien/luyen-tap" element={<LuyenTap />} />
           <Route path="/sinhvien/chitiet-baithi/:id" element={<ChiTietBaiThi />} />
+          <Route path="/sinhvien/luyen-tap/:subjectId" element={<DanhSachBaiLuyenTap />} />
+          <Route path="/sinhvien/luyen-tap/lam-bai/:practiceId" element={<LamBaiLuyenTap />} />
+          <Route path="/sinhvien/ketqua-luyen-tap" element={<KetQuaLuyenTap />} />
+
 
         </Route>
 

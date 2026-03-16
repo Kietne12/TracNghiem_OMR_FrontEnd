@@ -1,364 +1,331 @@
 import DashboardLayout from "../../layout/DashboardLayout"
-import { Settings, CheckCircle } from "lucide-react"
 import { useState } from "react"
+import {
+  Settings,
+  Shield,
+  Database,
+  CheckCircle,
+  Download,
+  Upload,
+  Trash2,
+  Clock,
+  HardDrive,
+} from "lucide-react"
 
 export default function QuanLyHeThong() {
 
+  const [activeTab, setActiveTab] = useState("settings")
   const [toast, setToast] = useState("")
+  const [progress, setProgress] = useState(0)
 
-  const [settings, setSettings] = useState({
-    maintenanceMode: false,
-    emailNotifications: true,
-    userRegistration: true,
-    forcePasswordChange: false,
-  })
-
-  const showToast = (message: string) => {
-    setToast(message)
+  const showToast = (msg: string) => {
+    setToast(msg)
     setTimeout(() => setToast(""), 1500)
   }
 
-  const handleToggle = (key: string) => {
+  const [settings, setSettings] = useState({
+    examTime: 300,
+    maxQuestions: 500,
+    maxUpload: 50,
+    maxLoginAttempts: 5,
+    sessionTimeout: 30,
+    forcePasswordChange: false
+  })
 
-    const updated = {
+  const [backupHistory] = useState([
+    { id: 1, time: "24/02/2026 02:30", size: "120MB" },
+    { id: 2, time: "20/02/2026 02:30", size: "118MB" },
+    { id: 3, time: "15/02/2026 02:30", size: "115MB" }
+  ])
+
+  const handleChange = (e: any) => {
+    const { name, value } = e.target
+
+    setSettings({
       ...settings,
-      [key]: !settings[key as keyof typeof settings]
-    }
+      [name]: value
+    })
+  }
 
-    setSettings(updated)
-
-    console.log("Auto save:", updated)
-
-    showToast("Cập nhật cài đặt thành công")
+  const togglePasswordChange = () => {
+    setSettings({
+      ...settings,
+      forcePasswordChange: !settings.forcePasswordChange
+    })
   }
 
   const handleBackup = () => {
 
-    console.log("Backup database")
+    setProgress(0)
 
     showToast("Đang sao lưu dữ liệu...")
 
-    setTimeout(() => {
-      showToast("Sao lưu dữ liệu thành công")
-    }, 1200)
+    let value = 0
+
+    const interval = setInterval(() => {
+
+      value += 20
+
+      setProgress(value)
+
+      if (value >= 100) {
+        clearInterval(interval)
+        showToast("Sao lưu hoàn tất")
+      }
+
+    }, 500)
+
+  }
+
+  const handleDownload = () => {
+    showToast("Đang tải bản sao lưu")
+  }
+
+  const handleRestore = () => {
+    showToast("Khôi phục dữ liệu thành công")
   }
 
   const handleClearCache = () => {
-
-    console.log("Clear cache")
-
     showToast("Đã xóa cache hệ thống")
-  }
-
-  const handleUpdateSystem = () => {
-
-    console.log("Update system")
-
-    showToast("Hệ thống đã được cập nhật")
   }
 
   return (
     <DashboardLayout role="ADMIN">
 
-      {/* Header */}
-      <div className="mb-8 -mt-1 flex justify-between items-start">
+      <div className="mb-8">
 
-        <div>
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent">
+          Cấu hình hệ thống
+        </h1>
 
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
-            Quản lý hệ thống
-          </h1>
-
-          <p className="text-slate-600">
-            Cấu hình và quản lý các thiết lập hệ thống
-          </p>
-
-        </div>
+        <p className="text-slate-600 mt-2">
+          Quản lý thiết lập và dữ liệu hệ thống
+        </p>
 
       </div>
 
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Tabs */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">
+
+        <div className="flex border-b border-slate-200">
+
+          <Tab
+            icon={<Settings size={18} />}
+            label="Cài đặt"
+            active={activeTab === "settings"}
+            onClick={() => setActiveTab("settings")}
+          />
+
+          <Tab
+            icon={<Shield size={18} />}
+            label="Bảo mật"
+            active={activeTab === "security"}
+            onClick={() => setActiveTab("security")}
+          />
+
+          <Tab
+            icon={<Database size={18} />}
+            label="Sao lưu dữ liệu"
+            active={activeTab === "backup"}
+            onClick={() => setActiveTab("backup")}
+          />
+
+        </div>
 
 
-        {/* LEFT */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="p-8">
 
 
-          {/* General Settings */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          {/* SETTINGS */}
+          {activeTab === "settings" && (
 
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
+            <div className="space-y-6">
 
-              <Settings size={24} className="text-indigo-600" />
+              <Input label="Thời gian thi tối đa (phút)" name="examTime" value={settings.examTime} onChange={handleChange} />
 
-              <h2 className="text-xl font-bold text-slate-800">
-                Cài đặt chung
-              </h2>
+              <Input label="Số câu hỏi tối đa" name="maxQuestions" value={settings.maxQuestions} onChange={handleChange} />
+
+              <Input label="Kích thước upload tối đa (MB)" name="maxUpload" value={settings.maxUpload} onChange={handleChange} />
 
             </div>
 
-
-            <div className="space-y-4">
-
-
-              {/* Maintenance */}
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-
-                <div>
-                  <p className="font-medium text-slate-800">
-                    Chế độ bảo trì
-                  </p>
-
-                  <p className="text-sm text-slate-600">
-                    Tạm thời khóa hệ thống để bảo trì
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => handleToggle("maintenanceMode")}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition
-                  ${settings.maintenanceMode ? "bg-red-500" : "bg-slate-300"}`}
-                >
-
-                  <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition
-                    ${settings.maintenanceMode ? "translate-x-7" : "translate-x-1"}`}
-                  />
-
-                </button>
-
-              </div>
+          )}
 
 
-              {/* Email */}
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+          {/* SECURITY */}
+          {activeTab === "security" && (
+
+            <div className="space-y-6">
+
+              <Input label="Số lần đăng nhập thất bại tối đa" name="maxLoginAttempts" value={settings.maxLoginAttempts} onChange={handleChange} />
+
+              <Input label="Thời gian hết phiên đăng nhập (phút)" name="sessionTimeout" value={settings.sessionTimeout} onChange={handleChange} />
+
+              <div className="flex items-center justify-between bg-slate-50 p-4 rounded-xl">
 
                 <div>
-
-                  <p className="font-medium text-slate-800">
-                    Thông báo email
-                  </p>
-
-                  <p className="text-sm text-slate-600">
-                    Gửi email thông báo cho người dùng
-                  </p>
-
-                </div>
-
-                <button
-                  onClick={() => handleToggle("emailNotifications")}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition
-                  ${settings.emailNotifications ? "bg-green-500" : "bg-slate-300"}`}
-                >
-
-                  <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition
-                    ${settings.emailNotifications ? "translate-x-7" : "translate-x-1"}`}
-                  />
-
-                </button>
-
-              </div>
-
-
-              {/* Register */}
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-
-                <div>
-
-                  <p className="font-medium text-slate-800">
-                    Cho phép đăng ký
-                  </p>
-
-                  <p className="text-sm text-slate-600">
-                    Người dùng có thể tự tạo tài khoản
-                  </p>
-
-                </div>
-
-                <button
-                  onClick={() => handleToggle("userRegistration")}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition
-                  ${settings.userRegistration ? "bg-green-500" : "bg-slate-300"}`}
-                >
-
-                  <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition
-                    ${settings.userRegistration ? "translate-x-7" : "translate-x-1"}`}
-                  />
-
-                </button>
-
-              </div>
-
-
-              {/* Force Password */}
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-
-                <div>
-
-                  <p className="font-medium text-slate-800">
-                    Buộc đổi mật khẩu
-                  </p>
-
-                  <p className="text-sm text-slate-600">
+                  <p className="font-medium">Buộc đổi mật khẩu</p>
+                  <p className="text-sm text-slate-500">
                     Người dùng phải đổi mật khẩu sau khi đăng nhập
                   </p>
-
                 </div>
 
                 <button
-                  onClick={() => handleToggle("forcePasswordChange")}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition
+                  onClick={togglePasswordChange}
+                  className={`relative inline-flex h-8 w-14 rounded-full transition
                   ${settings.forcePasswordChange ? "bg-green-500" : "bg-slate-300"}`}
                 >
-
                   <span
                     className={`inline-block h-6 w-6 transform rounded-full bg-white transition
                     ${settings.forcePasswordChange ? "translate-x-7" : "translate-x-1"}`}
                   />
-
                 </button>
 
               </div>
 
             </div>
 
-          </div>
+          )}
 
 
+          {/* BACKUP */}
+          {activeTab === "backup" && (
 
-          {/* System Limits */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div className="space-y-8">
 
-            <h2 className="text-xl font-bold text-slate-800 mb-6 pb-4 border-b border-slate-200">
-              Giới hạn hệ thống
-            </h2>
+              {/* Backup actions */}
+              <div className="flex flex-wrap gap-4">
 
+                <button
+                  onClick={handleBackup}
+                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg"
+                >
+                  <Database size={16} />
+                  Sao lưu ngay
+                </button>
 
-            <div className="space-y-4">
+                <button
+                  onClick={handleDownload}
+                  className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-lg"
+                >
+                  <Download size={16} />
+                  Tải xuống
+                </button>
 
-              <div>
+                <label className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg cursor-pointer">
 
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Thời gian thi tối đa (phút)
+                  <Upload size={16} />
+
+                  Khôi phục dữ liệu
+
+                  <input type="file" className="hidden" onChange={handleRestore} />
+
                 </label>
 
-                <input
-                  type="number"
-                  defaultValue="300"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
+                <button
+                  onClick={handleClearCache}
+                  className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg"
+                >
+                  <Trash2 size={16} />
+                  Xóa cache
+                </button>
 
               </div>
 
 
+              {/* Progress */}
+              {progress > 0 && (
+
+                <div>
+
+                  <p className="text-sm text-slate-600 mb-2">
+                    Tiến trình sao lưu
+                  </p>
+
+                  <div className="w-full bg-slate-200 rounded-full h-3">
+
+                    <div
+                      className="bg-indigo-600 h-3 rounded-full transition"
+                      style={{ width: `${progress}%` }}
+                    />
+
+                  </div>
+
+                </div>
+
+              )}
+
+
+              {/* Backup History */}
               <div>
 
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Số câu hỏi tối đa
-                </label>
+                <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                  <Clock size={18} />
+                  Lịch sử sao lưu
+                </h3>
 
-                <input
-                  type="number"
-                  defaultValue="500"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
+                <div className="border rounded-xl overflow-hidden">
 
-              </div>
+                  <table className="w-full text-sm">
 
+                    <thead className="bg-slate-100">
 
-              <div>
+                      <tr>
 
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Kích thước upload tối đa (MB)
-                </label>
+                        <th className="text-left px-4 py-3">Thời gian</th>
+                        <th className="text-left px-4 py-3">Dung lượng</th>
+                        <th className="text-left px-4 py-3">Hành động</th>
 
-                <input
-                  type="number"
-                  defaultValue="50"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
+                      </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                      {backupHistory.map((item) => (
+
+                        <tr key={item.id} className="border-t">
+
+                          <td className="px-4 py-3 flex items-center gap-2">
+                            <Clock size={14} />
+                            {item.time}
+                          </td>
+
+                          <td className="px-4 py-3 flex items-center gap-2">
+                            <HardDrive size={14} />
+                            {item.size}
+                          </td>
+
+                          <td className="px-4 py-3">
+
+                            <button className="flex items-center gap-1 text-indigo-600 hover:underline">
+                              <Download size={14} />
+                              Tải
+                            </button>
+
+                          </td>
+
+                        </tr>
+
+                      ))}
+
+                    </tbody>
+
+                  </table>
+
+                </div>
 
               </div>
 
             </div>
 
-          </div>
-
-        </div>
-
-
-
-        {/* RIGHT */}
-        <div className="space-y-6">
-
-
-          {/* System Info */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-
-            <h3 className="font-bold text-slate-800 mb-4">
-              Thông tin hệ thống
-            </h3>
-
-            <div className="space-y-3 text-sm">
-
-              <div>
-                <p className="text-slate-500">Phiên bản</p>
-                <p className="font-semibold text-slate-800">1.0.0</p>
-              </div>
-
-              <div>
-                <p className="text-slate-500">Build</p>
-                <p className="font-semibold text-slate-800">2026031101</p>
-              </div>
-
-              <div>
-                <p className="text-slate-500">Database</p>
-                <p className="font-semibold text-slate-800">PostgreSQL 13</p>
-              </div>
-
-              <div>
-                <p className="text-slate-500">Cập nhật gần nhất</p>
-                <p className="font-semibold text-slate-800">11/03/2026</p>
-              </div>
-
-            </div>
-
-          </div>
-
-
-
-          {/* Quick Actions */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-3">
-
-            <button
-              onClick={handleBackup}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium"
-            >
-              Sao lưu dữ liệu
-            </button>
-
-            <button
-              onClick={handleClearCache}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-lg font-medium"
-            >
-              Xóa cache
-            </button>
-
-            <button
-              onClick={handleUpdateSystem}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium"
-            >
-              Cập nhật hệ thống
-            </button>
-
-          </div>
+          )}
 
         </div>
 
       </div>
+
 
 
       {/* Toast */}
@@ -380,4 +347,54 @@ export default function QuanLyHeThong() {
 
     </DashboardLayout>
   )
+}
+
+
+
+/* TAB */
+function Tab({ icon, label, active, onClick }: any) {
+
+  return (
+
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold border-b-2 transition
+      ${active
+          ? "border-indigo-600 text-indigo-600"
+          : "border-transparent text-slate-600 hover:text-indigo-600"
+        }`}
+    >
+      {icon}
+      {label}
+    </button>
+
+  )
+
+}
+
+
+
+/* INPUT */
+function Input({ label, name, value, onChange }: any) {
+
+  return (
+
+    <div>
+
+      <label className="block text-sm font-semibold text-slate-700 mb-2">
+        {label}
+      </label>
+
+      <input
+        type="number"
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+      />
+
+    </div>
+
+  )
+
 }

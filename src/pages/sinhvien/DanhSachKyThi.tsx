@@ -1,187 +1,118 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import DashboardLayout from "../../layout/DashboardLayout"
-import { Calendar, Clock, BookOpen, FileText } from "lucide-react"
+import { BookOpen, Calendar } from "lucide-react"
 
 export default function DanhSachKyThi() {
 
     const navigate = useNavigate()
 
-    const exams = [
+    const [year, setYear] = useState("2025-2026")
+    const [semester, setSemester] = useState("HK1")
+
+    const subjects = [
         {
             id: 1,
-            subject: "Cấu trúc dữ liệu",
-            title: "Giữa kỳ",
-            date: "15/03/2026",
-            time: "08:00",
-            duration: 90,
-            questions: 40,
-            status: "Đang diễn ra"
+            name: "Cấu trúc dữ liệu",
+            desc: "Các cấu trúc dữ liệu cơ bản và thuật toán"
         },
         {
             id: 2,
-            subject: "Toán cao cấp",
-            title: "Kiểm tra chương 2",
-            date: "16/03/2026",
-            time: "13:00",
-            duration: 60,
-            questions: 30,
-            status: "Sắp diễn ra"
+            name: "Toán cao cấp",
+            desc: "Đạo hàm, tích phân và các bài toán ứng dụng"
         },
         {
             id: 3,
-            subject: "Lập trình C++",
-            title: "Cuối kỳ",
-            date: "18/03/2026",
-            time: "10:00",
-            duration: 120,
-            questions: 50,
-            status: "Đã kết thúc"
+            name: "Lập trình C++",
+            desc: "Ngôn ngữ C++ và lập trình hướng đối tượng"
         }
     ]
-
-    const [search, setSearch] = useState("")
-    const [statusFilter, setStatusFilter] = useState("Tất cả")
-    const [subjectFilter, setSubjectFilter] = useState("Tất cả")
-
-    const subjects = ["Tất cả", ...new Set(exams.map(e => e.subject))]
-
-    const filteredExams = exams.filter(exam => {
-
-        const matchSearch =
-            exam.title.toLowerCase().includes(search.toLowerCase()) ||
-            exam.subject.toLowerCase().includes(search.toLowerCase())
-
-        const matchStatus =
-            statusFilter === "Tất cả" || exam.status === statusFilter
-
-        const matchSubject =
-            subjectFilter === "Tất cả" || exam.subject === subjectFilter
-
-        return matchSearch && matchStatus && matchSubject
-
-    })
-
-    const getStatusStyle = (status: string) => {
-        if (status === "Đang diễn ra") return "bg-green-100 text-green-700"
-        if (status === "Sắp diễn ra") return "bg-blue-100 text-blue-700"
-        return "bg-gray-100 text-gray-600"
-    }
-
-    const getButtonText = (status: string) => {
-        if (status === "Đang diễn ra") return "Vào thi"
-        if (status === "Sắp diễn ra") return "Chưa mở"
-        return "Đã đóng"
-    }
 
     return (
         <DashboardLayout role="SINH VIÊN">
 
             {/* Header */}
-            <div className="mb-6">
+
+            <div className="mb-8">
+
                 <h1 className="text-3xl font-bold text-slate-800 mb-2">
                     Danh sách kỳ thi
                 </h1>
-                <p className="text-slate-600">
-                    Chọn kỳ thi để bắt đầu làm bài
+
+                <p className="text-slate-500">
+                    Chọn môn học để xem các bài kiểm tra
                 </p>
-            </div>
-
-            {/* Filters */}
-            <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6 flex flex-col md:flex-row gap-4">
-
-                <input
-                    type="text"
-                    placeholder="Tìm kỳ thi..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="border border-slate-300 rounded-lg px-3 py-2 flex-1"
-                />
-
-                <select
-                    value={subjectFilter}
-                    onChange={(e) => setSubjectFilter(e.target.value)}
-                    className="border border-slate-300 rounded-lg px-3 py-2"
-                >
-                    {subjects.map(sub => (
-                        <option key={sub}>{sub}</option>
-                    ))}
-                </select>
-
-                <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="border border-slate-300 rounded-lg px-3 py-2"
-                >
-                    <option>Tất cả</option>
-                    <option>Đang diễn ra</option>
-                    <option>Sắp diễn ra</option>
-                    <option>Đã kết thúc</option>
-                </select>
 
             </div>
 
-            {/* Exam list */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Bộ lọc */}
 
-                {filteredExams.map((exam) => (
+            <div className="bg-white border border-slate-200 rounded-xl p-5 mb-8 flex flex-wrap gap-4 items-center">
+
+                <div className="flex items-center gap-2 text-slate-600">
+                    <Calendar size={18} />
+                    <span className="text-sm font-medium">
+                        Năm học
+                    </span>
+                </div>
+
+                <select
+                    value={year}
+                    onChange={(e) => setYear(e.target.value)}
+                    className="border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                >
+                    <option>2025-2026</option>
+                    <option>2024-2025</option>
+                </select>
+
+                <div className="flex items-center gap-2 text-slate-600 ml-4">
+                    <span className="text-sm font-medium">
+                        Học kỳ
+                    </span>
+                </div>
+
+                <select
+                    value={semester}
+                    onChange={(e) => setSemester(e.target.value)}
+                    className="border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                >
+                    <option>HK1</option>
+                    <option>HK2</option>
+                </select>
+
+            </div>
+
+            {/* Danh sách môn */}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                {subjects.map((subject) => (
 
                     <div
-                        key={exam.id}
-                        className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition"
+                        key={subject.id}
+                        onClick={() => navigate(`/sinhvien/ky-thi/${subject.id}`)}
+                        className="bg-white border border-slate-200 rounded-xl p-6 cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all duration-200"
                     >
 
-                        <div className="flex items-center gap-3 mb-2">
-                            <BookOpen className="text-indigo-600" size={22} />
-                            <h2 className="text-lg font-semibold text-slate-800">
-                                {exam.title}
+                        <div className="flex items-center gap-4 mb-4">
+
+                            <div className="w-12 h-12 bg-indigo-100 text-indigo-600 flex items-center justify-center rounded-lg">
+                                <BookOpen size={24} />
+                            </div>
+
+                            <h2 className="font-semibold text-lg text-slate-800">
+                                {subject.name}
                             </h2>
+
                         </div>
 
-                        <p className="text-sm text-slate-500 mb-4">
-                            Môn học: {exam.subject}
+                        <p className="text-sm text-slate-500 leading-relaxed">
+                            {subject.desc}
                         </p>
 
-                        <div className="space-y-2 text-sm text-slate-600 mb-4">
-
-                            <div className="flex items-center gap-2">
-                                <Calendar size={16} />
-                                {exam.date}
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <Clock size={16} />
-                                {exam.time}
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <Clock size={16} />
-                                Thời gian: {exam.duration} phút
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <FileText size={16} />
-                                Số câu: {exam.questions}
-                            </div>
-
+                        <div className="mt-6 text-indigo-600 text-sm font-medium">
+                            Xem bài kiểm tra →
                         </div>
-
-                        <div className="mb-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(exam.status)}`}>
-                                {exam.status}
-                            </span>
-                        </div>
-
-                        <button
-                            disabled={exam.status !== "Đang diễn ra"}
-                            onClick={() => navigate(`/sinhvien/lam-bai/${exam.id}`)}
-                            className={`w-full py-2 rounded-lg font-medium transition
-              ${exam.status === "Đang diễn ra"
-                                    ? "bg-indigo-600 hover:bg-indigo-700 text-white"
-                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
-                        >
-                            {getButtonText(exam.status)}
-                        </button>
 
                     </div>
 

@@ -10,6 +10,7 @@ import {
 
 import { useAuth } from "../../hooks/useAuth"
 import { useNavigate } from "react-router-dom"
+import { useState } from "react"
 
 import {
   BarChart,
@@ -32,12 +33,57 @@ export default function Dashboard() {
     class: user?.class || "Lớp A1 - Khóa 2024",
   }
 
-  // Danh sách toàn bộ kỳ thi (giống trang DanhSachKyThi)
-  const allExams = [
+  /* =========================
+     Chọn học kỳ + năm học
+  ========================== */
+
+  const [semester, setSemester] = useState("")
+  const [year, setYear] = useState("")
+
+  /* =========================
+     Điểm các môn đã học
+  ========================== */
+
+  const subjects = [
+    { subject: "Toán cao cấp", score: 8.5, semester: "HK2", year: "2025-2026" },
+    { subject: "Cấu trúc dữ liệu", score: 7.2, semester: "HK2", year: "2025-2026" },
+    { subject: "Lập trình C++", score: 8.1, semester: "HK2", year: "2025-2026" }
+  ]
+
+  const filteredSubjects = subjects.filter(
+    s => s.semester === semester && s.year === year
+  )
+
+  /* =========================
+     Điểm trung bình tất cả môn
+  ========================== */
+
+  const avgScore =
+    subjects.length > 0
+      ? (
+        subjects.reduce((sum, s) => sum + s.score, 0) /
+        subjects.length
+      ).toFixed(2)
+      : "0"
+
+  /* =========================
+     Tiến độ học tập
+  ========================== */
+
+  const totalSubjects = 64
+  const completedSubjects = subjects.length
+
+  const progress =
+    ((completedSubjects / totalSubjects) * 100).toFixed(1)
+
+  /* =========================
+     Kỳ thi
+  ========================== */
+
+  const exams = [
     {
       id: 1,
       subject: "Cấu trúc dữ liệu",
-      status: "Đang diễn ra",
       date: "2026-03-15",
       time: "08:00",
       duration: 90
@@ -45,52 +91,13 @@ export default function Dashboard() {
     {
       id: 2,
       subject: "Toán cao cấp",
-      status: "Sắp diễn ra",
       date: "2026-03-16",
       time: "13:00",
       duration: 60
-    },
-    {
-      id: 3,
-      subject: "Lập trình C++",
-      status: "Đã kết thúc",
-      date: "2026-03-18",
-      time: "10:00",
-      duration: 120
     }
   ]
 
-  const upcomingExams = allExams.filter(
-    exam => exam.status !== "Đã kết thúc"
-  )
-
-  const completedExams = allExams.filter(
-    exam => exam.status === "Đã kết thúc"
-  )
-
-  const totalExams = allExams.length
-
-  const progress =
-    totalExams > 0
-      ? ((completedExams.length / totalExams) * 100).toFixed(0)
-      : 0
-
-  // Kết quả gần đây
-  const recentResults = [
-    { subject: "Toán", score: 8.5 },
-    { subject: "CTDL", score: 7.2 },
-    { subject: "C++", score: 8.1 }
-  ]
-
-  const avgScore =
-    recentResults.length > 0
-      ? (
-        recentResults.reduce((sum, r) => sum + r.score, 0) /
-        recentResults.length
-      ).toFixed(1)
-      : "0"
-
-  const nextExam = upcomingExams[0]
+  const nextExam = exams[0]
 
   const calculateCountdown = (date: string) => {
 
@@ -106,13 +113,15 @@ export default function Dashboard() {
   }
 
   return (
+
     <DashboardLayout role="SINH VIÊN">
 
       {/* Header */}
+
       <div className="mb-8">
 
         <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
-          Xin chào, Trần Văn B!
+          Xin chào, {studentInfo.name}!
         </h1>
 
         <p className="text-slate-600">
@@ -121,9 +130,9 @@ export default function Dashboard() {
 
       </div>
 
-
       {/* Student Info */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 
         <div className="bg-white border rounded-lg p-6 shadow-sm">
           <p className="text-sm text-slate-500 mb-2">MSSV</p>
@@ -140,99 +149,58 @@ export default function Dashboard() {
           <p className="text-2xl font-bold text-green-600">{avgScore}/10</p>
         </div>
 
-        {/* Card tổng bài thi đã sửa đúng */}
-        <div className="bg-gradient-to-br from-indigo-600 to-cyan-500 rounded-lg p-6 text-white">
-
-          <p className="text-sm text-cyan-100 mb-2">
-            Tổng bài thi
-          </p>
-
-          <p className="text-3xl font-bold">
-            {totalExams}
-          </p>
-
-        </div>
-
       </div>
 
+      {/* Layout */}
 
-      {/* Main Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-
-        {/* Upcoming Exams */}
         <div className="lg:col-span-2">
+
+          {/* Kỳ thi */}
 
           <div className="bg-white border rounded-lg p-6 shadow-sm mb-6">
 
             <div className="flex items-center gap-2 mb-6">
-
               <Calendar className="text-indigo-600" size={24} />
               <h2 className="text-xl font-bold">
                 Kỳ thi sắp diễn ra
               </h2>
-
             </div>
 
-            <div className="space-y-4">
+            {exams.map(exam => (
 
-              {upcomingExams.map((exam) => (
+              <div
+                key={exam.id}
+                className="border rounded-lg p-4 mb-4"
+              >
 
-                <div
-                  key={exam.id}
-                  className="border rounded-lg p-4 hover:bg-slate-50"
+                <h3 className="font-semibold">
+                  {exam.subject}
+                </h3>
+
+                <p className="text-sm text-slate-600">
+                  {exam.date} - {exam.time}
+                </p>
+
+                <button
+                  onClick={() => navigate(`/sinhvien/lam-bai/${exam.id}`)}
+                  className="mt-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg"
                 >
+                  Vào thi
+                </button>
 
-                  <div className="flex justify-between mb-2">
+              </div>
 
-                    <div>
-
-                      <h3 className="font-semibold">
-                        {exam.subject}
-                      </h3>
-
-                      <div className="flex gap-4 text-sm text-slate-600">
-
-                        <span className="flex items-center gap-1">
-                          <Calendar size={14} />
-                          {exam.date}
-                        </span>
-
-                        <span className="flex items-center gap-1">
-                          <Clock size={14} />
-                          {exam.time}
-                        </span>
-
-                      </div>
-
-                    </div>
-
-                    <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
-                      {exam.duration} phút
-                    </span>
-
-                  </div>
-
-                  <button
-                    onClick={() => navigate(`/sinhvien/lam-bai/${exam.id}`)}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg"
-                  >
-                    Vào thi
-                  </button>
-
-                </div>
-
-              ))}
-
-            </div>
+            ))}
 
           </div>
 
+          {/* Biểu đồ */}
 
-          {/* Biểu đồ điểm */}
           <div className="bg-white border rounded-lg p-6 shadow-sm">
 
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 mb-4">
 
               <TrendingUp size={22} className="text-green-600" />
 
@@ -242,46 +210,79 @@ export default function Dashboard() {
 
             </div>
 
-            <ResponsiveContainer width="100%" height={250}>
+            {/* Select */}
 
-              <BarChart data={recentResults}>
+            <div className="flex gap-3 mb-4">
 
-                <CartesianGrid strokeDasharray="3 3" />
+              <select
+                className="border rounded p-2"
+                value={semester}
+                onChange={e => setSemester(e.target.value)}
+              >
+                <option value="">Chọn học kỳ</option>
+                <option value="HK1">HK1</option>
+                <option value="HK2">HK2</option>
+              </select>
 
-                <XAxis dataKey="subject" />
+              <select
+                className="border rounded p-2"
+                value={year}
+                onChange={e => setYear(e.target.value)}
+              >
+                <option value="">Chọn năm học</option>
+                <option value="2025-2026">2025-2026</option>
+                <option value="2024-2025">2024-2025</option>
+              </select>
 
-                <YAxis domain={[0, 10]} />
+            </div>
 
-                <Tooltip />
+            {filteredSubjects.length > 0 ? (
 
-                <Bar
-                  dataKey="score"
-                  fill="#6366f1"
-                  radius={[6, 6, 0, 0]}
-                />
+              <ResponsiveContainer width="100%" height={250}>
 
-              </BarChart>
+                <BarChart data={filteredSubjects}>
 
-            </ResponsiveContainer>
+                  <CartesianGrid strokeDasharray="3 3" />
+
+                  <XAxis dataKey="subject" />
+
+                  <YAxis domain={[0, 10]} />
+
+                  <Tooltip />
+
+                  <Bar
+                    dataKey="score"
+                    fill="#6366f1"
+                    radius={[6, 6, 0, 0]}
+                  />
+
+                </BarChart>
+
+              </ResponsiveContainer>
+
+            ) : (
+
+              <p className="text-slate-500">
+                Hãy chọn học kỳ và năm học để xem biểu đồ
+              </p>
+
+            )}
 
           </div>
 
         </div>
 
-
         {/* Sidebar */}
+
         <div className="space-y-6">
 
-
           {/* Kỳ thi gần nhất */}
+
           <div className="bg-white border rounded-lg p-6 shadow-sm">
 
             <h3 className="font-bold mb-4 flex items-center gap-2">
-
               <Clock size={18} className="text-indigo-600" />
-
               Kỳ thi gần nhất
-
             </h3>
 
             <p className="font-semibold text-lg">
@@ -298,8 +299,8 @@ export default function Dashboard() {
 
           </div>
 
+          {/* Progress */}
 
-          {/* Progress học tập */}
           <div className="bg-white border rounded-lg p-6 shadow-sm">
 
             <h3 className="font-bold mb-4 flex items-center gap-2">
@@ -315,7 +316,7 @@ export default function Dashboard() {
               <span>Hoàn thành</span>
 
               <span>
-                {completedExams.length}/{totalExams}
+                {completedSubjects}/{totalSubjects} môn
               </span>
 
             </div>
@@ -330,13 +331,13 @@ export default function Dashboard() {
             </div>
 
             <p className="text-sm text-slate-500 mt-2">
-              {progress}% hoàn thành
+              {progress}% chương trình
             </p>
 
           </div>
 
+          {/* Quick */}
 
-          {/* Quick Actions */}
           <div className="bg-white border rounded-lg p-6 shadow-sm">
 
             <h3 className="font-bold mb-4">
@@ -376,5 +377,7 @@ export default function Dashboard() {
       </div>
 
     </DashboardLayout>
+
   )
+
 }
