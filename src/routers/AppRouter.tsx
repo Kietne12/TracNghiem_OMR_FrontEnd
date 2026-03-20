@@ -27,6 +27,10 @@ import TeacherDashboard from "../pages/giangvien/Dashboard"
 import TeacherCreateExam from "../pages/giangvien/TaoKyThi"
 import TeacherGrade from "../pages/giangvien/ChamBai"
 import TeacherQuestionBank from "../pages/giangvien/NganHangCauHoi"
+import UploadOMR from "../pages/giangvien/UploadOMR"
+import TaoBaiLuyenTap from "../pages/giangvien/TaoBaiLuyenTap"
+import ThongKeDiemThi from "../pages/giangvien/ThongKeDiemThi"
+import TeacherLichSuLamBai from "../pages/giangvien/LichSuLamBai"
 
 // Admin Pages
 import AdminDashboard from "../pages/admin/Dashboard"
@@ -79,6 +83,10 @@ export default function AppRouter() {
           <Route path="/giangvien/tao-ky-thi" element={<TeacherCreateExam />} />
           <Route path="/giangvien/cham-bai" element={<TeacherGrade />} />
           <Route path="/giangvien/ngan-hang-cau-hoi" element={<TeacherQuestionBank />} />
+          <Route path="/giangvien/omr-upload" element={<UploadOMR />} />
+          <Route path="/giangvien/tao-bai-luyen-tap" element={<TaoBaiLuyenTap />} />
+          <Route path="/giangvien/thong-ke-diem-thi" element={<ThongKeDiemThi />} />
+          <Route path="/giangvien/lich-su-lam-bai" element={<TeacherLichSuLamBai />} />
 
         </Route>
 

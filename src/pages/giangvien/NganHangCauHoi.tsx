@@ -1,8 +1,11 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import { Plus, Search, Trash2, Edit2, Download, Upload, Filter } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import * as XLSX from 'xlsx'
 import AddQuestionModal from "../../components/AddQuestionModal"
 import EditQuestionModal from "../../components/EditQuestionModal"
+import api from "../../services/api"
+
 
 interface Question {
   id: number
@@ -15,6 +18,21 @@ interface Question {
   createdAt: string
 }
 
+interface QuestionApi {
+  id: number
+  mon_hoc_id: number
+  noi_dung: string
+  dap_an_a: string
+  dap_an_b: string
+  dap_an_c: string
+  dap_an_d: string
+  dap_an_dung: 'A' | 'B' | 'C' | 'D'
+  do_kho: number
+  chuong: number
+  nguoi_tao_id: number
+  createdAt: string
+  updatedAt: string
+}
 interface Chapter {
   id: string
   name: string
@@ -39,48 +57,40 @@ export default function NganHangCauHoi() {
     { id: 'ch4', name: 'Chương 4: Phương trình vi phân', questionCount: 25 },
   ]
 
-  const [questions, setQuestions] = useState<Question[]>([
-    {
-      id: 1,
-      text: 'Đạo hàm của hàm số y = x² + 2x là?',
-      chapter: 'ch2',
-      difficulty: 'Dễ',
-      answers: ['2x + 2', '2x', 'x + 2', '2'],
-      correctAnswer: 0,
-      uses: 5,
-      createdAt: '15/03/2026',
-    },
-    {
-      id: 2,
-      text: 'Tích phân của hàm số f(x) = 2x là?',
-      chapter: 'ch3',
-      difficulty: 'Dễ',
-      answers: ['x² + C', '2x² + C', 'x² + 2x + C', '2 + C'],
-      correctAnswer: 0,
-      uses: 3,
-      createdAt: '14/03/2026',
-    },
-    {
-      id: 3,
-      text: 'Giới hạn của hàm số f(x) = (x² - 1)/(x - 1) khi x → 1 là?',
-      chapter: 'ch1',
-      difficulty: 'Bình thường',
-      answers: ['0', '1', '2', 'Không tồn tại'],
-      correctAnswer: 2,
-      uses: 8,
-      createdAt: '13/03/2026',
-    },
-    {
-      id: 4,
-      text: 'Tính tích phân xác định: ∫₀¹ x² dx = ?',
-      chapter: 'ch3',
-      difficulty: 'Khó',
-      answers: ['1/3', '1/2', '2/3', '1'],
-      correctAnswer: 0,
-      uses: 2,
-      createdAt: '12/03/2026',
-    },
-  ])
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(true)
+  const [apiError, setApiError] = useState("")
+
+  const loadQuestions = async () => {
+    setIsLoadingQuestions(true)
+    try {
+      const res = await api.get<{ questions: QuestionApi[] }>("/api/question-bank")
+      const raw = res.data.questions || []
+      setQuestions(
+        raw.map((q) => ({
+          id: q.id,
+          text: q.noi_dung,
+          chapter: `ch${q.chuong}`,
+          difficulty: q.do_kho === 1 ? "Dễ" : q.do_kho === 2 ? "Bình thường" : "Khó",
+          answers: [q.dap_an_a, q.dap_an_b, q.dap_an_c, q.dap_an_d],
+          correctAnswer: ["A", "B", "C", "D"].indexOf(q.dap_an_dung),
+          uses: 0,
+          createdAt: q.createdAt ? new Date(q.createdAt).toLocaleDateString("vi-VN") : "",
+        }))
+      )
+      setApiError("")
+    } catch (error: any) {
+      console.error("Lỗi khi tải câu hỏi:", error)
+      setApiError(error?.response?.data?.message || "Không tải được danh sách câu hỏi")
+    } finally {
+      setIsLoadingQuestions(false)
+    }
+  }
+
+  useEffect(() => {
+    loadQuestions()
+  }, [])
+
 
   const difficultyLevels = [
     { id: 'all', label: 'Tất cả độ khó' },
@@ -96,9 +106,69 @@ export default function NganHangCauHoi() {
     return matchesSearch && matchesChapter && matchesDifficulty
   })
 
-  const handleDeleteQuestion = (id: number) => {
-    if (confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')) {
-      setQuestions(questions.filter(q => q.id !== id))
+  if (isLoadingQuestions) {
+    return (
+      <DashboardLayout role="GIẢNG VIÊN">
+        <div className="text-center py-20">Đang tải ngân hàng câu hỏi...</div>
+      </DashboardLayout>
+    )
+  }
+
+  if (apiError) {
+    return (
+      <DashboardLayout role="GIẢNG VIÊN">
+        <div className="text-center py-20 text-red-600">{apiError}</div>
+      </DashboardLayout>
+    )
+  }
+
+  const handleDeleteQuestion = async (id: number) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')) return
+    try {
+      await api.delete(`/api/question-bank/${id}`)
+      await loadQuestions()
+    } catch (err: any) {
+      console.error('Xóa câu hỏi lỗi:', err)
+      alert(err?.response?.data?.message || 'Xóa câu hỏi thất bại')
+    }
+  }
+
+  const uiToApi = (question: Omit<Question, 'id' | 'uses' | 'createdAt'>) => ({
+    mon_hoc_id: Number(question.chapter.replace('ch', '')),
+    noi_dung: question.text,
+    dap_an_a: question.answers[0],
+    dap_an_b: question.answers[1],
+    dap_an_c: question.answers[2],
+    dap_an_d: question.answers[3],
+    dap_an_dung: ['A', 'B', 'C', 'D'][question.correctAnswer] as 'A' | 'B' | 'C' | 'D',
+    do_kho: question.difficulty === 'Dễ' ? 1 : question.difficulty === 'Bình thường' ? 2 : 3,
+    chuong: Number(question.chapter.replace('ch', '')),
+  })
+
+  const handleAddQuestion = async (question: Omit<Question, 'id' | 'uses' | 'createdAt'>) => {
+    try {
+      const body = uiToApi(question)
+      await api.post('/api/question-bank', body)
+      await loadQuestions()
+      setShowAddModal(false)
+    } catch (err: any) {
+      console.error('Thêm câu hỏi lỗi:', err)
+      alert(err?.response?.data?.message || 'Thêm câu hỏi thất bại')
+    }
+  }
+
+  const handleEditQuestion = async (updatedQuestion: Question) => {
+    if (!editingQuestion) return
+
+    try {
+      const body = uiToApi(updatedQuestion)
+      await api.put(`/api/question-bank/${editingQuestion.id}`, body)
+      await loadQuestions()
+      setShowEditModal(false)
+      setEditingQuestion(null)
+    } catch (err: any) {
+      console.error('Cập nhật câu hỏi lỗi:', err)
+      alert(err?.response?.data?.message || 'Cập nhật câu hỏi thất bại')
     }
   }
 
@@ -121,13 +191,160 @@ Chương 2: Đạo hàm,Ví dụ câu hỏi 3,ĐA A,ĐA B,ĐA C,ĐA D,3,Khó`
     const file = event.target.files?.[0]
     if (!file) return
 
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const content = e.target?.result as string
-      // Parse CSV and add questions
-      alert('Tải lên file thành công! Hệ thống sẽ xử lý và thêm vào ngân hàng câu hỏi.')
+    const processRows = async (rows: string[][]) => {
+      if (rows.length <= 1) {
+        alert('File không có dữ liệu hợp lệ.')
+        return
+      }
+
+      const normalizeKey = (value: string) => {
+        const normalized = value
+          .toString()
+          .trim()
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/\p{Diacritic}/gu, '')
+          .replace(/đ/g, 'd')
+          .replace(/\s+/g, ' ')
+          .replace(/[^a-z0-9 ]/g, '')
+        return normalized
+      }
+
+      const canonicalMap: Record<string, string> = {
+        'chuong': 'chuong',
+        'chuong so': 'chuong',
+        'chương': 'chuong',
+        'chương so': 'chuong',
+        'chapter': 'chuong',
+        'cau hoi': 'cau hoi',
+        'cauhoi': 'cau hoi',
+        'câu hoi': 'cau hoi',
+        'câu hỏi': 'cau hoi',
+        'dap an a': 'dap an a',
+        'dapan a': 'dap an a',
+        'dap an b': 'dap an b',
+        'dap an c': 'dap an c',
+        'dap an d': 'dap an d',
+        'dap an dung': 'dap an dung',
+        'dapan dung': 'dap an dung',
+        'do kho': 'do kho',
+        'dokho': 'do kho',
+        'do khoi': 'do kho',
+      }
+
+      const header = rows[0].map((h) => canonicalMap[normalizeKey(h.toString())] || normalizeKey(h.toString()))
+
+      const required = ['chuong', 'cau hoi', 'dap an a', 'dap an b', 'dap an c', 'dap an d', 'dap an dung', 'do kho']
+      const missingHeaders = required.filter((col) => !header.includes(col))
+      if (missingHeaders.length > 0) {
+        alert(`Định dạng file không đúng. Thiếu cột: ${missingHeaders.join(', ')}`)
+        return
+      }
+
+      const getValue = (row: any[], key: string) => {
+        const idx = header.indexOf(key)
+        return idx >= 0 ? (row[idx] || '').toString().trim() : ''
+      }
+
+      const questionsToUpload = rows.slice(1).map((row, idx) => {
+        const chapterText = getValue(row, 'chuong')
+        const match = chapterText.match(/\d+/)
+        const chapterNumber = match ? Number(match[0]) : 1
+
+        const difficultyText = getValue(row, 'do kho').toLowerCase()
+        const difficulty = difficultyText.includes('de')
+          ? 1
+          : difficultyText.includes('kho')
+          ? 3
+          : 2
+
+        const correctAnswerRaw = getValue(row, 'dap an dung').toLowerCase()
+        const mappedCorrect = ['1', 'a'].includes(correctAnswerRaw)
+          ? 'A'
+          : ['2', 'b'].includes(correctAnswerRaw)
+          ? 'B'
+          : ['3', 'c'].includes(correctAnswerRaw)
+          ? 'C'
+          : ['4', 'd'].includes(correctAnswerRaw)
+          ? 'D'
+          : ''
+
+        return {
+          rowIndex: idx + 2,
+          data: {
+            mon_hoc_id: 1, // map sang môn học mặc định đã seed (Cơ sở dữ liệu)
+            noi_dung: getValue(row, 'cau hoi'),
+            dap_an_a: getValue(row, 'dap an a'),
+            dap_an_b: getValue(row, 'dap an b'),
+            dap_an_c: getValue(row, 'dap an c'),
+            dap_an_d: getValue(row, 'dap an d'),
+            dap_an_dung: mappedCorrect,
+            do_kho: difficulty,
+            chuong: chapterNumber,
+          },
+        }
+      })
+
+      let successCount = 0
+      const failedRows: string[] = []
+
+      for (const item of questionsToUpload) {
+        const q = item.data
+        if (!q.noi_dung || !q.dap_an_a || !q.dap_an_b || !q.dap_an_c || !q.dap_an_d || !q.dap_an_dung) {
+          failedRows.push(`Dòng ${item.rowIndex}: thiếu dữ liệu (câu hỏi/đáp án/đáp án đúng).`)
+          continue
+        }
+
+        try {
+          await api.post('/api/question-bank', q)
+          successCount += 1
+        } catch (err: any) {
+          const message = err?.response?.data?.message || err?.message || 'Lỗi không xác định'
+          failedRows.push(`Dòng ${item.rowIndex}: ${message}`)
+        }
+      }
+
+      await loadQuestions()
+
+      let summary = `Đã nhập thành công ${successCount} câu hỏi.`
+      if (failedRows.length > 0) {
+        summary += `\nBỏ qua ${failedRows.length} dòng bị lỗi:\n${failedRows.join('\n')}`
+      }
+      alert(summary)
     }
-    reader.readAsText(file)
+
+    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+      const reader = new FileReader()
+      reader.onload = async () => {
+        try {
+          const data = new Uint8Array(reader.result as ArrayBuffer)
+          const workbook = XLSX.read(data, { type: 'array' })
+          const sheetName = workbook.SheetNames[0]
+          const worksheet = workbook.Sheets[sheetName]
+          const jsonRows: any[] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' })
+          await processRows(jsonRows as string[][])
+        } catch (err: any) {
+          console.error('Lỗi đọc file xlsx:', err)
+          alert('Không đọc được file .xlsx. Vui lòng kiểm tra lại.')
+        } finally {
+          event.target.value = ''
+        }
+      }
+      reader.readAsArrayBuffer(file)
+    } else {
+      const reader = new FileReader()
+      reader.onload = async () => {
+        const content = String(reader.result || '')
+        const rows = content
+          .split(/\r?\n/)
+          .map((row) => row.split(',').map((col) => col.trim()))
+          .filter((row) => row.some((cell) => cell !== ''))
+
+        await processRows(rows)
+        event.target.value = ''
+      }
+      reader.readAsText(file)
+    }
   }
 
   const getDifficultyColor = (difficulty: string) => {
@@ -371,16 +588,7 @@ Chương 2: Đạo hàm,Ví dụ câu hỏi 3,ĐA A,ĐA B,ĐA C,ĐA D,3,Khó`
       {showAddModal && (
         <AddQuestionModal
           chapters={chapters}
-          onAdd={(question) => {
-            const newQuestion: Question = {
-              ...question,
-              id: Math.max(...questions.map((q) => q.id), 0) + 1,
-              uses: 0,
-              createdAt: new Date().toLocaleDateString('vi-VN'),
-            }
-            setQuestions([...questions, newQuestion])
-            setShowAddModal(false)
-          }}
+          onAdd={handleAddQuestion}
           onClose={() => setShowAddModal(false)}
         />
       )}
@@ -390,11 +598,7 @@ Chương 2: Đạo hàm,Ví dụ câu hỏi 3,ĐA A,ĐA B,ĐA C,ĐA D,3,Khó`
         <EditQuestionModal
           question={editingQuestion}
           chapters={chapters}
-          onEdit={(updatedQuestion) => {
-            setQuestions(questions.map((q) => (q.id === editingQuestion.id ? {...editingQuestion, ...updatedQuestion} : q)))
-            setShowEditModal(false)
-            setEditingQuestion(null)
-          }}
+          onEdit={handleEditQuestion}
           onClose={() => {
             setShowEditModal(false)
             setEditingQuestion(null)

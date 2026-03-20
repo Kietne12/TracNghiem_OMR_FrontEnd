@@ -1,4 +1,4 @@
-import { LayoutDashboard, BookOpen, FileText, ClipboardList, Users, Settings, Clock, Brain } from "lucide-react"
+import { LayoutDashboard, BookOpen, FileText, ClipboardList, Users, Settings, Clock, Brain, ScanLine } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "../hooks/useAuth"
 import { memo } from "react"
@@ -22,6 +22,7 @@ const menuByRole = {
     { icon: BookOpen, label: "Ngân hàng câu hỏi", href: "/giangvien/ngan-hang-cau-hoi" },
     { icon: FileText, label: "Tạo kỳ thi", href: "/giangvien/tao-ky-thi" },
     { icon: ClipboardList, label: "Chấm bài", href: "/giangvien/cham-bai" },
+    { icon: ScanLine, label: "Upload OMR", href: "/giangvien/omr-upload" },
     { icon: BookOpen, label: "Tạo bài luyện tập", href: "/giangvien/tao-bai-luyen-tap" },
     { icon: FileText, label: "Thống kê điểm thi", href: "/giangvien/thong-ke-diem-thi" },
     { icon: ClipboardList, label: "Lịch sử làm bài", href: "/giangvien/lich-su-lam-bai" },
