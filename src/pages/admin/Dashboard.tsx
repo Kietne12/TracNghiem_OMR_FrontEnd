@@ -1,22 +1,39 @@
 import DashboardLayout from "../../layout/DashboardLayout"
-import {
-  Users,
-  FileText
-} from "lucide-react"
+import { Users, FileText } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export default function AdminDashboard() {
-  const stats = {
-    totalUsers: 350,
-    teachers: 25,
-    students: 325
+
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    teachers: 0,
+    students: 0
+  })
+
+  const [recentActivities, setRecentActivities] = useState<any[]>([])
+
+  // 🔥 FETCH DATA FROM BACKEND
+  const fetchDashboard = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/admin/dashboard")
+      const data = await res.json()
+
+      setStats({
+        totalUsers: data.totalUsers,
+        teachers: data.teachers,
+        students: data.students
+      })
+
+      setRecentActivities(data.recentActivities)
+
+    } catch (err) {
+      console.error("Lỗi dashboard:", err)
+    }
   }
 
-  const recentActivities = [
-    { id: 1, action: "Giáo viên mới", user: "Trần Văn X", time: "2 giờ trước" },
-    { id: 2, action: "Kỳ thi tạo", user: "Lê Thị Y", time: "4 giờ trước" },
-    { id: 3, action: "Tài khoản khóa", user: "Nguyễn Z", time: "1 ngày trước" },
-    { id: 4, action: "Lớp mới tạo", user: "Phạm A", time: "2 ngày trước" },
-  ]
+  useEffect(() => {
+    fetchDashboard()
+  }, [])
 
   return (
 
@@ -24,9 +41,7 @@ export default function AdminDashboard() {
 
       {/* Header */}
       <div className="mb-8 flex justify-between items-start">
-
         <div>
-
           <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
             Bảng điều khiển Admin
           </h1>
@@ -34,11 +49,8 @@ export default function AdminDashboard() {
           <p className="text-slate-600">
             Tổng quan hệ thống thi trắc nghiệm OMR
           </p>
-
         </div>
-
       </div>
-
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -66,10 +78,8 @@ export default function AdminDashboard() {
 
       </div>
 
-
       {/* Main content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
 
         {/* System Status */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
@@ -79,15 +89,12 @@ export default function AdminDashboard() {
           </h2>
 
           <div className="space-y-5">
-
             <StatusRow name="Database" status="ok" />
             <StatusRow name="API Server" status="ok" />
             <StatusRow name="Storage" status="ok" />
-
           </div>
 
         </div>
-
 
         {/* Recent Activities */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
@@ -98,6 +105,10 @@ export default function AdminDashboard() {
 
           <div className="space-y-4">
 
+            {recentActivities.length === 0 && (
+              <p className="text-sm text-slate-500">Chưa có hoạt động</p>
+            )}
+
             {recentActivities.map((activity) => (
 
               <div
@@ -106,11 +117,10 @@ export default function AdminDashboard() {
               >
 
                 <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold">
-                  {activity.user.charAt(0)}
+                  {activity.user?.charAt(0)}
                 </div>
 
                 <div className="flex-1">
-
                   <p className="text-sm font-medium text-slate-800">
                     {activity.action}
                   </p>
@@ -118,7 +128,6 @@ export default function AdminDashboard() {
                   <p className="text-xs text-slate-500">
                     {activity.user}
                   </p>
-
                 </div>
 
                 <span className="text-xs text-slate-400">
@@ -136,13 +145,11 @@ export default function AdminDashboard() {
       </div>
 
     </DashboardLayout>
-
   )
 }
 
 
 /* Stat Card */
-
 function StatCard({ icon, label, value, color }: any) {
 
   const colorMap: any = {
@@ -152,11 +159,9 @@ function StatCard({ icon, label, value, color }: any) {
   }
 
   return (
-
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition">
 
       <div className="flex items-center justify-between mb-3">
-
         <p className="text-sm text-slate-600">
           {label}
         </p>
@@ -164,7 +169,6 @@ function StatCard({ icon, label, value, color }: any) {
         <div className={`p-2 rounded-lg ${colorMap[color]}`}>
           {icon}
         </div>
-
       </div>
 
       <p className="text-2xl font-bold text-slate-800">
@@ -172,13 +176,11 @@ function StatCard({ icon, label, value, color }: any) {
       </p>
 
     </div>
-
   )
 }
 
 
 /* Status Row */
-
 function StatusRow({ name, status }: any) {
 
   const map: any = {
@@ -190,7 +192,6 @@ function StatusRow({ name, status }: any) {
   }
 
   return (
-
     <div className="flex items-center justify-between">
 
       <span className="text-slate-700 font-medium">
@@ -198,16 +199,13 @@ function StatusRow({ name, status }: any) {
       </span>
 
       <div className="flex items-center gap-2">
-
         <div className={`w-3 h-3 rounded-full ${map[status].dot}`} />
 
         <span className={`text-sm ${map[status].color}`}>
           {map[status].text}
         </span>
-
       </div>
 
     </div>
-
   )
 }
