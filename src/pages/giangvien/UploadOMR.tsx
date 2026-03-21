@@ -20,6 +20,8 @@ export default function UploadOMR() {
   const [exams, setExams] = useState<ExamItem[]>([]);
   const [selectedExamId, setSelectedExamId] = useState<number | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [mssvOverride, setMssvOverride] = useState("");
+  const [maDeOverride, setMaDeOverride] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -41,6 +43,9 @@ export default function UploadOMR() {
   }, []);
 
   const selectedExam = exams.find((item) => item.id === selectedExamId) || null;
+  const validExamCodes = (selectedExam?.cau_hinh?.ma_de_data || [])
+    .map((item) => item.ma_de?.toString().trim())
+    .filter((item): item is string => Boolean(item));
 
   const triggerDownload = async (url: string, fallbackMessage: string) => {
     try {
@@ -87,6 +92,12 @@ export default function UploadOMR() {
     try {
       const formData = new FormData();
       formData.append("omr_image", selectedFile);
+      if (mssvOverride.trim()) {
+        formData.append("mssv_override", mssvOverride.trim());
+      }
+      if (maDeOverride.trim()) {
+        formData.append("ma_de_override", maDeOverride.trim());
+      }
 
       const res = await api.post(`/api/exams/${selectedExamId}/omr/upload`, formData, {
         headers: {
@@ -139,6 +150,8 @@ export default function UploadOMR() {
                   setMessage("");
                   setError("");
                   setSelectedFile(null);
+                  setMssvOverride("");
+                  setMaDeOverride("");
                 }}
               >
                 <option value="">-- Chọn kỳ thi --</option>
@@ -159,11 +172,13 @@ export default function UploadOMR() {
                 <p className="text-sm text-slate-700 mb-3">
                   <strong>Tổng câu:</strong> {selectedExam.cau_hinh?.tong_so_cau || "?"} |{" "}
                   <strong>Mã đề hợp lệ:</strong>{" "}
-                  {selectedExam.cau_hinh?.ma_de_data
-                    ?.map((item) => item.ma_de)
-                    .filter(Boolean)
-                    .join(", ") || "MD001"}
+                  {validExamCodes.length > 0 ? validExamCodes.join(", ") : "Chưa có"}
                 </p>
+                {validExamCodes.length === 0 && (
+                  <p className="text-xs text-amber-700 mb-3">
+                    Kỳ thi này chưa có danh sách mã đề rõ ràng. Hãy tạo/sinh đề OMR trước khi upload.
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
@@ -222,6 +237,32 @@ export default function UploadOMR() {
                     )}
                   </div>
                 </label>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  MSSV Override (tùy chọn)
+                </label>
+                <input
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2"
+                  placeholder="Ví dụ: 00001"
+                  value={mssvOverride}
+                  onChange={(e) => setMssvOverride(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Mã đề Override (tùy chọn)
+                </label>
+                <input
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2"
+                  placeholder="Ví dụ: 001"
+                  value={maDeOverride}
+                  onChange={(e) => setMaDeOverride(e.target.value)}
+                />
               </div>
             </div>
 

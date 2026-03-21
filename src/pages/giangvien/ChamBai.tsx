@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { CheckCircle, Clock, Download, Filter, Search } from "lucide-react";
+import { CheckCircle, Clock, Download, Eye, Filter, Search, X } from "lucide-react";
 import DashboardLayout from "../../layout/DashboardLayout";
 import api from "../../services/api";
 
@@ -28,6 +28,39 @@ interface StudentResult {
   correctAnswers: number;
   totalTime: number;
   status: "Đã chấm" | "Chờ chấm";
+  detail_url?: string;
+}
+
+interface SubmissionAnswerDetail {
+  questionNumber: number;
+  questionId: number;
+  questionContent: string;
+  options: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+  };
+  selectedAnswer: string | null;
+  correctAnswer: string | null;
+  isCorrect: boolean;
+}
+
+interface SubmissionDetailResponse {
+  exam: {
+    id: number;
+    name: string;
+  };
+  submission: {
+    id: number;
+    studentId: string;
+    studentName: string;
+    score: number | null;
+    submitTime: string;
+    totalQuestions: number;
+    correctAnswers: number;
+  };
+  answers: SubmissionAnswerDetail[];
 }
 
 interface GradingStats {
@@ -69,6 +102,10 @@ export default function ChamBai() {
   const [isLoadingExams, setIsLoadingExams] = useState(false);
   const [isLoadingResults, setIsLoadingResults] = useState(false);
   const [error, setError] = useState("");
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState("");
+  const [detailData, setDetailData] = useState<SubmissionDetailResponse | null>(null);
 
   const academicYears = ["2025-2026", "2024-2025", "2023-2024"];
 
@@ -210,6 +247,27 @@ export default function ChamBai() {
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+  };
+
+  const openSubmissionDetail = async (submission: StudentResult) => {
+    if (!currentExamId) return;
+
+    setIsDetailOpen(true);
+    setIsDetailLoading(true);
+    setDetailError("");
+    setDetailData(null);
+
+    try {
+      const detailUrl =
+        submission.detail_url || `/api/exams/${currentExamId}/grading-results/${submission.id}`;
+
+      const res = await api.get<SubmissionDetailResponse>(detailUrl);
+      setDetailData(res.data);
+    } catch (err: any) {
+      setDetailError(err?.response?.data?.message || "Không tải được chi tiết bài làm");
+    } finally {
+      setIsDetailLoading(false);
+    }
   };
 
   return (
@@ -374,12 +432,13 @@ export default function ChamBai() {
                     <th className="px-6 py-3 text-center text-sm font-semibold text-slate-700">Câu đúng</th>
                     <th className="px-6 py-3 text-center text-sm font-semibold text-slate-700">Điểm</th>
                     <th className="px-6 py-3 text-center text-sm font-semibold text-slate-700">Trạng thái</th>
+                    <th className="px-6 py-3 text-center text-sm font-semibold text-slate-700">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {isLoadingResults && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-indigo-600">
+                      <td colSpan={7} className="px-6 py-12 text-center text-indigo-600">
                         Đang tải dữ liệu chấm bài...
                       </td>
                     </tr>
@@ -424,12 +483,23 @@ export default function ChamBai() {
                             </span>
                           )}
                         </td>
+                        <td className="px-6 py-4 text-sm text-center">
+                          <button
+                            type="button"
+                            onClick={() => openSubmissionDetail(sub)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-indigo-200 text-indigo-700 hover:bg-indigo-50 disabled:opacity-60"
+                            disabled={sub.status !== "Đã chấm"}
+                          >
+                            <Eye size={14} />
+                            Xem chi tiết
+                          </button>
+                        </td>
                       </tr>
                     ))}
 
                   {!isLoadingResults && filteredSubmissions.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                      <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
                         {examInfo
                           ? "Không có bài nộp phù hợp với điều kiện tìm kiếm"
                           : "Chọn kỳ thi để xem kết quả"}
@@ -442,6 +512,83 @@ export default function ChamBai() {
           </div>
         </div>
       </div>
+
+      {isDetailOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-5xl max-h-[90vh] overflow-hidden bg-white rounded-xl shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-xl font-bold text-slate-800">Chi tiết bài làm</h3>
+                {detailData && (
+                  <p className="text-sm text-slate-600 mt-1">
+                    {detailData.submission.studentId} - {detailData.submission.studentName} | Điểm: {detailData.submission.score ?? "-"} | Đúng: {detailData.submission.correctAnswers}/{detailData.submission.totalQuestions}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDetailOpen(false)}
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-72px)]">
+              {isDetailLoading && (
+                <p className="text-indigo-600">Đang tải chi tiết bài làm...</p>
+              )}
+
+              {!isDetailLoading && detailError && (
+                <div className="border border-red-200 bg-red-50 rounded-lg p-3 text-red-700 text-sm">
+                  {detailError}
+                </div>
+              )}
+
+              {!isDetailLoading && !detailError && detailData && (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="px-3 py-2 text-left text-sm font-semibold text-slate-700">Câu</th>
+                        <th className="px-3 py-2 text-left text-sm font-semibold text-slate-700">Nội dung</th>
+                        <th className="px-3 py-2 text-center text-sm font-semibold text-slate-700">Chọn</th>
+                        <th className="px-3 py-2 text-center text-sm font-semibold text-slate-700">Đúng</th>
+                        <th className="px-3 py-2 text-center text-sm font-semibold text-slate-700">Kết quả</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detailData.answers.map((item) => (
+                        <tr key={`${item.questionId}-${item.questionNumber}`} className="border-b border-slate-100 align-top">
+                          <td className="px-3 py-3 text-sm font-semibold text-slate-700">{item.questionNumber}</td>
+                          <td className="px-3 py-3 text-sm text-slate-700">
+                            <p className="mb-2">{item.questionContent || "-"}</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-xs text-slate-500">
+                              <p>A. {item.options.A}</p>
+                              <p>B. {item.options.B}</p>
+                              <p>C. {item.options.C}</p>
+                              <p>D. {item.options.D}</p>
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-center text-sm font-semibold text-indigo-700">{item.selectedAnswer || "-"}</td>
+                          <td className="px-3 py-3 text-center text-sm font-semibold text-emerald-700">{item.correctAnswer || "-"}</td>
+                          <td className="px-3 py-3 text-center text-sm">
+                            {item.isCorrect ? (
+                              <span className="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Đúng</span>
+                            ) : (
+                              <span className="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">Sai</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
