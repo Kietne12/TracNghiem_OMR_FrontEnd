@@ -1,112 +1,131 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import { useParams, useNavigate } from "react-router-dom"
-import { CheckCircle, XCircle, ArrowLeft } from "lucide-react"
-import { useState } from "react"
+import { CheckCircle, XCircle, ArrowLeft, Loader2, AlertCircle } from "lucide-react"
+import { useEffect, useState } from "react"
+import api from "../../services/api"
 
 export default function ChiTietBaiThi() {
 
-    const { id } = useParams()
-    const navigate = useNavigate()
-
-    const exam = {
-        name: "Toán cao cấp 1 - Giữa kỳ",
-        score: 8.5,
-        correct: 4,
-        total: 10
+    interface AnswerItem {
+        questionNumber: number
+        questionId: number
+        questionContent: string
+        options: {
+            A: string
+            B: string
+            C: string
+            D: string
+        }
+        selectedAnswer: string | null
+        correctAnswer: string | null
+        isCorrect: boolean
     }
 
-    const questions = [
-        {
-            id: 1,
-            question: "Đạo hàm của x² là gì?",
-            options: ["A. 2x", "B. x", "C. x²", "D. 1"],
-            correct: "A",
-            selected: "A"
-        },
-        {
-            id: 2,
-            question: "Giới hạn lim(x→0) sinx/x bằng?",
-            options: ["A. 0", "B. 1", "C. ∞", "D. Không tồn tại"],
-            correct: "B",
-            selected: "B"
-        },
-        {
-            id: 3,
-            question: "Ma trận vuông là gì?",
-            options: [
-                "A. Số hàng = số cột",
-                "B. Số hàng > số cột",
-                "C. Số hàng < số cột",
-                "D. Không xác định"
-            ],
-            correct: "A",
-            selected: "C"
-        },
-        {
-            id: 4,
-            question: "Stack hoạt động theo nguyên tắc?",
-            options: ["A. FIFO", "B. LIFO", "C. Random", "D. Queue"],
-            correct: "B",
-            selected: "B"
-        },
-        {
-            id: 5,
-            question: "Đạo hàm của hằng số?",
-            options: ["A. 0", "B. 1", "C. x", "D. Không xác định"],
-            correct: "A",
-            selected: "A"
-        },
-        {
-            id: 6,
-            question: "Queue hoạt động theo nguyên tắc?",
-            options: ["A. FIFO", "B. LIFO", "C. Random", "D. Stack"],
-            correct: "A",
-            selected: "A"
-        },
-        {
-            id: 7,
-            question: "C++ là ngôn ngữ gì?",
-            options: ["A. OOP", "B. Script", "C. Markup", "D. Database"],
-            correct: "A",
-            selected: "A"
-        },
-        {
-            id: 8,
-            question: "HTML là gì?",
-            options: ["A. Programming", "B. Markup", "C. Database", "D. Server"],
-            correct: "B",
-            selected: "B"
-        },
-        {
-            id: 9,
-            question: "SQL dùng để?",
-            options: ["A. Thiết kế UI", "B. Quản lý database", "C. Game", "D. AI"],
-            correct: "B",
-            selected: "B"
-        },
-        {
-            id: 10,
-            question: "React là thư viện của?",
-            options: ["A. Google", "B. Facebook", "C. Microsoft", "D. Amazon"],
-            correct: "B",
-            selected: "B"
+    const { id } = useParams()
+    const navigate = useNavigate()
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState("")
+    const [exam, setExam] = useState({
+        name: "",
+        score: 0,
+        correct: 0,
+        total: 0,
+    })
+    const [questions, setQuestions] = useState<AnswerItem[]>([])
+
+    useEffect(() => {
+        let mounted = true
+
+        const loadDetail = async () => {
+            setLoading(true)
+            setError("")
+
+            try {
+                const res = await api.get(`/api/exams/history/attempt/${id}`)
+                const examData = res.data?.exam
+                const submission = res.data?.submission
+                const answers = Array.isArray(res.data?.answers) ? res.data.answers : []
+
+                if (!mounted) return
+
+                setExam({
+                    name: examData?.name || "Bài thi",
+                    score: Number(submission?.score || 0),
+                    correct: Number(submission?.correctAnswers || 0),
+                    total: Number(submission?.totalQuestions || 0),
+                })
+                setQuestions(answers)
+            } catch (err: any) {
+                if (!mounted) return
+                setError(err?.response?.data?.message || "Không tải được chi tiết bài thi")
+            } finally {
+                if (mounted) setLoading(false)
+            }
         }
-    ]
+
+        loadDetail()
+
+        return () => {
+            mounted = false
+        }
+    }, [id])
 
     const wrong = exam.total - exam.correct
-    const percent = ((exam.correct / exam.total) * 100).toFixed(0)
+    const percent = exam.total > 0 ? ((exam.correct / exam.total) * 100).toFixed(0) : "0"
 
     /* Pagination */
 
     const questionsPerPage = 5
     const [page, setPage] = useState(1)
 
-    const totalPages = Math.ceil(questions.length / questionsPerPage)
+    const totalPages = Math.max(1, Math.ceil(questions.length / questionsPerPage))
 
     const start = (page - 1) * questionsPerPage
     const end = start + questionsPerPage
 
     const currentQuestions = questions.slice(start, end)
+
+    const renderOption = (label: "A" | "B" | "C" | "D", text: string, q: AnswerItem) => {
+        const isSelected = q.selectedAnswer === label
+        const isCorrect = q.correctAnswer === label
+
+        return (
+            <div
+                key={label}
+                className={`p-3 rounded-lg border ${
+                    isCorrect
+                        ? "border-green-500 bg-green-50"
+                        : isSelected
+                            ? "border-red-500 bg-red-50"
+                            : "border-slate-200"
+                }`}
+            >
+                {`${label}. ${text || "--"}`}
+            </div>
+        )
+    }
+
+    if (loading) {
+        return (
+            <DashboardLayout role="SINH VIÊN">
+                <div className="py-20 flex items-center justify-center gap-2 text-slate-500">
+                    <Loader2 className="animate-spin" size={18} />
+                    Đang tải chi tiết bài thi...
+                </div>
+            </DashboardLayout>
+        )
+    }
+
+    if (error) {
+        return (
+            <DashboardLayout role="SINH VIÊN">
+                <div className="max-w-5xl mx-auto rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-700 flex items-start gap-2">
+                    <AlertCircle size={18} className="mt-0.5" />
+                    <div>{error}</div>
+                </div>
+            </DashboardLayout>
+        )
+    }
 
     return (
         <DashboardLayout role="SINH VIÊN">
@@ -170,51 +189,30 @@ export default function ChiTietBaiThi() {
                 {/* Questions */}
                 <div className="space-y-4">
 
-                    {currentQuestions.map((q, index) => (
+                    {currentQuestions.map((q) => (
 
-                        <div key={q.id} className="bg-white border rounded-lg p-6 shadow-sm">
+                        <div key={q.questionId} className="bg-white border rounded-lg p-6 shadow-sm">
 
                             <p className="font-semibold mb-4">
-                                Câu {start + index + 1}: {q.question}
+                                Câu {q.questionNumber}: {q.questionContent}
                             </p>
 
                             <div className="space-y-2">
-
-                                {q.options.map((opt, i) => {
-
-                                    const letter = opt.charAt(0)
-                                    const isSelected = q.selected === letter
-                                    const isCorrect = q.correct === letter
-
-                                    return (
-
-                                        <div
-                                            key={i}
-                                            className={`p-3 rounded-lg border
-                      ${isCorrect
-                                                    ? "border-green-500 bg-green-50"
-                                                    : isSelected
-                                                        ? "border-red-500 bg-red-50"
-                                                        : "border-slate-200"
-                                                }`}
-                                        >
-                                            {opt}
-                                        </div>
-
-                                    )
-
-                                })}
+                                {renderOption("A", q.options.A, q)}
+                                {renderOption("B", q.options.B, q)}
+                                {renderOption("C", q.options.C, q)}
+                                {renderOption("D", q.options.D, q)}
 
                             </div>
 
                             <div className="mt-4 text-sm">
 
                                 <p>
-                                    Bạn chọn: <span className="font-semibold">{q.selected}</span>
+                                    Bạn chọn: <span className="font-semibold">{q.selectedAnswer || "Chưa chọn"}</span>
                                 </p>
 
                                 <p className="text-green-600">
-                                    Đáp án đúng: {q.correct}
+                                    Đáp án đúng: {q.correctAnswer || "--"}
                                 </p>
 
                             </div>

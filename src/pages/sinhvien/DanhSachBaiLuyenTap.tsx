@@ -1,54 +1,93 @@
 import DashboardLayout from "../../layout/DashboardLayout"
-import { Clock, FileText, BookOpen } from "lucide-react"
+import { AlertCircle, Clock, FileText, BookOpen, Loader2 } from "lucide-react"
 import { useParams, useNavigate } from "react-router-dom"
+import { useAuth } from "../../hooks/useAuth"
+import { useEffect, useMemo, useState } from "react"
+import api from "../../services/api"
 
 export default function DanhSachBaiLuyenTap() {
 
+    interface PracticeItem {
+        id: number
+        ten_bai: string
+        so_cau: number
+        thoi_gian_lam_bai: number
+    }
+
+    interface PracticeHistoryStatItem {
+        bai_luyen_tap_id: number
+        tong_diem: number | null
+    }
+
     const { subjectId } = useParams()
     const navigate = useNavigate()
+    const { account } = useAuth()
 
-    const practices = [
-        {
-            id: 1,
-            subjectId: "1",
-            title: "Luyện tập chương 1",
-            duration: 15,
-            questions: 10,
-            attempts: 3,
-            lastScore: 8
-        },
-        {
-            id: 2,
-            subjectId: "1",
-            title: "Luyện tập Stack & Queue",
-            duration: 20,
-            questions: 12,
-            attempts: 1,
-            lastScore: 7.5
-        },
-        {
-            id: 3,
-            subjectId: "2",
-            title: "Luyện tập đạo hàm",
-            duration: 15,
-            questions: 10,
-            attempts: 2,
-            lastScore: 9
-        },
-        {
-            id: 4,
-            subjectId: "3",
-            title: "Luyện tập OOP cơ bản",
-            duration: 20,
-            questions: 12,
-            attempts: 0,
-            lastScore: null
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState("")
+    const [practices, setPractices] = useState<PracticeItem[]>([])
+    const [historyStats, setHistoryStats] = useState<PracticeHistoryStatItem[]>([])
+
+    useEffect(() => {
+        let mounted = true
+
+        const loadData = async () => {
+            setLoading(true)
+            setError("")
+            try {
+                const requests: Promise<any>[] = [
+                    api.get("/api/practice", { params: { lop_id: subjectId } }),
+                ]
+
+                if (account?.user_id) {
+                    requests.push(api.get(`/api/practice/thong-ke/student/${account.user_id}`))
+                }
+
+                const [practiceRes, historyRes] = await Promise.all(requests)
+
+                if (!mounted) return
+
+                const practiceData = practiceRes.data?.success && Array.isArray(practiceRes.data?.data)
+                    ? practiceRes.data.data
+                    : []
+
+                const historyData = historyRes?.data?.success && Array.isArray(historyRes?.data?.data)
+                    ? historyRes.data.data
+                    : []
+
+                setPractices(practiceData)
+                setHistoryStats(historyData)
+            } catch (err: any) {
+                if (!mounted) return
+                setError(err?.response?.data?.message || "Không thể tải bài luyện tập")
+            } finally {
+                if (mounted) setLoading(false)
+            }
         }
-    ]
 
-    const subjectPractices = practices.filter(
-        p => p.subjectId === subjectId
-    )
+        loadData()
+
+        return () => {
+            mounted = false
+        }
+    }, [subjectId, account?.user_id])
+
+    const historyMap = useMemo(() => {
+        const map = new Map<number, { attempts: number; lastScore: number | null }>()
+
+        historyStats.forEach((item) => {
+            const key = Number(item.bai_luyen_tap_id)
+            const current = map.get(key) || { attempts: 0, lastScore: null }
+            map.set(key, {
+                attempts: current.attempts + 1,
+                lastScore: current.lastScore === null && typeof item.tong_diem === "number"
+                    ? item.tong_diem
+                    : current.lastScore,
+            })
+        })
+
+        return map
+    }, [historyStats])
 
     return (
 
@@ -74,7 +113,21 @@ export default function DanhSachBaiLuyenTap() {
 
             {/* Không có bài */}
 
-            {subjectPractices.length === 0 && (
+            {loading && (
+                <div className="py-12 flex items-center justify-center gap-2 text-slate-500">
+                    <Loader2 className="animate-spin" size={18} />
+                    Đang tải bài luyện tập...
+                </div>
+            )}
+
+            {!loading && error && (
+                <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-700 flex items-start gap-2">
+                    <AlertCircle size={18} className="mt-0.5" />
+                    <div>{error}</div>
+                </div>
+            )}
+
+            {!loading && !error && practices.length === 0 && (
 
                 <div className="text-slate-500">
                     Chưa có bài luyện tập cho môn này
@@ -87,7 +140,12 @@ export default function DanhSachBaiLuyenTap() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                {subjectPractices.map((practice) => (
+                {!loading && !error && practices.map((practice) => {
+                    const history = historyMap.get(practice.id)
+                    const attempts = history?.attempts || 0
+                    const lastScore = history?.lastScore
+
+                    return (
 
                     <div
                         key={practice.id}
@@ -101,7 +159,7 @@ export default function DanhSachBaiLuyenTap() {
                             </div>
 
                             <h2 className="text-lg font-semibold text-slate-800">
-                                {practice.title}
+                                {practice.ten_bai}
                             </h2>
 
                         </div>
@@ -111,26 +169,26 @@ export default function DanhSachBaiLuyenTap() {
 
                             <div className="flex items-center gap-2">
                                 <Clock size={16} />
-                                Thời gian: {practice.duration} phút
+                                Thời gian: {practice.thoi_gian_lam_bai} phút
                             </div>
 
                             <div className="flex items-center gap-2">
                                 <FileText size={16} />
-                                Số câu: {practice.questions}
+                                Số câu: {practice.so_cau}
                             </div>
 
                             <div>
-                                Số lần làm: {practice.attempts}
+                                Số lần làm: {attempts}
                             </div>
 
                         </div>
 
 
-                        {practice.lastScore && (
+                        {typeof lastScore === "number" && (
 
                             <div className="mb-3 text-green-600 font-semibold">
 
-                                Điểm gần nhất: {practice.lastScore}
+                                Điểm gần nhất: {lastScore}
 
                             </div>
 
@@ -148,7 +206,7 @@ export default function DanhSachBaiLuyenTap() {
 
                     </div>
 
-                ))}
+                )})}
 
             </div>
 

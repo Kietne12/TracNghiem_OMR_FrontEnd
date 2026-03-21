@@ -7,6 +7,7 @@ export interface Account {
   password: string;
   ho_ten: string;
   email: string;
+  mssv?: string | null;
   role: "admin" | "giangvien" | "sinhvien";
 }
 

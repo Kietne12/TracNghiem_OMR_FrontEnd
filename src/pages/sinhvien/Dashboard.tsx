@@ -5,12 +5,15 @@ import {
   TrendingUp,
   Calendar,
   FileText,
-  Brain
+  Brain,
+  AlertCircle,
+  Loader2
 } from "lucide-react"
 
 import { useAuth } from "../../hooks/useAuth"
 import { useNavigate } from "react-router-dom"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import api from "../../services/api"
 
 import {
   BarChart,
@@ -26,10 +29,40 @@ export default function Dashboard() {
   const { account } = useAuth()
   const navigate = useNavigate()
 
+  interface LopHocItem {
+    id: number
+    ten_lop: string
+    hoc_ky: string | null
+    nam_hoc: string | null
+  }
+
+  interface KyThiItem {
+    id: number
+    ten_ky_thi: string
+    lop_id: number | null
+    thoi_gian_bat_dau: string | null
+    thoi_gian_ket_thuc: string | null
+    thoi_gian_lam_bai: number | null
+    trang_thai: string | null
+  }
+
+  interface LichSuLuyenTapItem {
+    lich_su_bai_id: number
+    ten_bai: string
+    tong_diem: number | null
+    thoi_gian_nop: string | null
+  }
+
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [classes, setClasses] = useState<LopHocItem[]>([])
+  const [exams, setExams] = useState<KyThiItem[]>([])
+  const [practiceHistory, setPracticeHistory] = useState<LichSuLuyenTapItem[]>([])
+
   const studentInfo = {
-    name: account?.ho_ten || "Sinh viên",
-    studentId: account?.username || "SV2026001",
-    class: "Lớp A1 - Khóa 2024",
+    name: account?.ho_ten || account?.username || "Sinh viên",
+    studentId: account?.mssv || "--",
+    class: "Đang cập nhật",
   }
 
   /* =========================
@@ -39,38 +72,181 @@ export default function Dashboard() {
   const [semester, setSemester] = useState("")
   const [year, setYear] = useState("")
 
+  useEffect(() => {
+    let mounted = true
+
+    const loadDashboard = async () => {
+      setLoading(true)
+      setError("")
+
+      try {
+        const calls: Promise<any>[] = [
+          api.get("/api/exams/classes"),
+          api.get("/api/exams"),
+        ]
+
+        if (account?.user_id) {
+          calls.push(api.get(`/api/practice/thong-ke/student/${account.user_id}`))
+        }
+
+        const results = await Promise.all(calls)
+
+        const classesData = Array.isArray(results[0]?.data?.classes)
+          ? results[0].data.classes
+          : []
+
+        const examsData = Array.isArray(results[1]?.data?.exams)
+          ? results[1].data.exams
+          : []
+
+        const practiceData = results[2]?.data?.success && Array.isArray(results[2]?.data?.data)
+          ? results[2].data.data
+          : []
+
+        if (!mounted) return
+
+        setClasses(classesData)
+        setExams(examsData)
+        setPracticeHistory(practiceData)
+
+        if (!semester && classesData.length > 0) {
+          const firstSemester = classesData.find((c: LopHocItem) => c.hoc_ky)?.hoc_ky || ""
+          setSemester(firstSemester)
+        }
+
+        if (!year && classesData.length > 0) {
+          const firstYear = classesData.find((c: LopHocItem) => c.nam_hoc)?.nam_hoc || ""
+          setYear(firstYear)
+        }
+      } catch (err: any) {
+        if (!mounted) return
+        setError(err?.response?.data?.message || "Không thể tải dữ liệu dashboard")
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+
+    loadDashboard()
+
+    return () => {
+      mounted = false
+    }
+  }, [account?.user_id])
+
   /* =========================
      Điểm các môn đã học
   ========================== */
 
-  const subjects = [
-    { subject: "Toán cao cấp", score: 8.5, semester: "HK2", year: "2025-2026" },
-    { subject: "Cấu trúc dữ liệu", score: 7.2, semester: "HK2", year: "2025-2026" },
-    { subject: "Lập trình C++", score: 8.1, semester: "HK2", year: "2025-2026" }
-  ]
+  const classesMap = useMemo(() => {
+    const map = new Map<number, LopHocItem>()
+    classes.forEach((item) => {
+      map.set(item.id, item)
+    })
+    return map
+  }, [classes])
 
-  const filteredSubjects = subjects.filter(
-    s => s.semester === semester && s.year === year
+  const semesterOptions = useMemo(
+    () => [...new Set(classes.map((item) => item.hoc_ky).filter(Boolean))] as string[],
+    [classes]
   )
+
+  const yearOptions = useMemo(
+    () => [...new Set(classes.map((item) => item.nam_hoc).filter(Boolean))] as string[],
+    [classes]
+  )
+
+  const filteredExams = exams.filter((exam) => {
+    if (!exam.lop_id) return false
+    const classInfo = classesMap.get(exam.lop_id)
+    if (!classInfo) return false
+
+    const matchSemester = !semester || classInfo.hoc_ky === semester
+    const matchYear = !year || classInfo.nam_hoc === year
+    return matchSemester && matchYear
+  })
+
+  const getExamTimeMeta = (exam: KyThiItem) => {
+    if (!exam.thoi_gian_bat_dau) {
+      return { status: "Không rõ", startTime: NaN, endTime: NaN }
+    }
+
+    const startTime = new Date(exam.thoi_gian_bat_dau).getTime()
+    if (Number.isNaN(startTime)) {
+      return { status: "Không rõ", startTime: NaN, endTime: NaN }
+    }
+
+    const endByField = exam.thoi_gian_ket_thuc
+      ? new Date(exam.thoi_gian_ket_thuc).getTime()
+      : NaN
+
+    const endByDuration = startTime + (Number(exam.thoi_gian_lam_bai || 0) * 60 * 1000)
+    const endTime = Number.isFinite(endByField) ? endByField : endByDuration
+
+    const now = Date.now()
+    if (now < startTime) {
+      return { status: "Sắp diễn ra", startTime, endTime }
+    }
+
+    if (Number.isFinite(endTime) && now <= endTime) {
+      return { status: "Đang diễn ra", startTime, endTime }
+    }
+
+    return { status: "Đã kết thúc", startTime, endTime }
+  }
+
+  const sortedUpcomingExams = [...filteredExams]
+    .filter((exam) => getExamTimeMeta(exam).status === "Sắp diễn ra")
+    .sort(
+      (a, b) =>
+        getExamTimeMeta(a).startTime - getExamTimeMeta(b).startTime
+    )
+
+  const recentExams = [...filteredExams]
+    .filter((exam) => Boolean(exam.thoi_gian_bat_dau))
+    .sort(
+      (a, b) =>
+        getExamTimeMeta(b).startTime - getExamTimeMeta(a).startTime
+    )
+    .slice(0, 3)
+
+  const chartData = practiceHistory
+    .filter((item) => typeof item.tong_diem === "number")
+    .slice(0, 8)
+    .map((item) => ({
+      subject: item.ten_bai,
+      score: Number(item.tong_diem ?? 0),
+    }))
+
+  const resolvedClassText = useMemo(() => {
+    if (filteredExams.length === 0) return "Chưa có lớp theo bộ lọc"
+    const firstExam = filteredExams[0]
+    const classInfo = firstExam.lop_id ? classesMap.get(firstExam.lop_id) : null
+    if (!classInfo) return "Chưa có dữ liệu lớp"
+    const hk = classInfo.hoc_ky ? `HK ${classInfo.hoc_ky}` : ""
+    const namHoc = classInfo.nam_hoc ? ` - ${classInfo.nam_hoc}` : ""
+    return `${classInfo.ten_lop}${hk ? ` (${hk}${namHoc})` : namHoc}`
+  }, [filteredExams, classesMap])
 
   /* =========================
      Điểm trung bình tất cả môn
   ========================== */
 
+  const scoredPractices = practiceHistory.filter((item) => typeof item.tong_diem === "number")
+
   const avgScore =
-    subjects.length > 0
+    scoredPractices.length > 0
       ? (
-        subjects.reduce((sum, s) => sum + s.score, 0) /
-        subjects.length
+        scoredPractices.reduce((sum, s) => sum + Number(s.tong_diem ?? 0), 0) /
+        scoredPractices.length
       ).toFixed(2)
-      : "0"
+      : "0.00"
 
   /* =========================
      Tiến độ học tập
   ========================== */
 
-  const totalSubjects = 64
-  const completedSubjects = subjects.length
+  const totalSubjects = practiceHistory.length || 1
+  const completedSubjects = scoredPractices.length
 
   const progress =
     ((completedSubjects / totalSubjects) * 100).toFixed(1)
@@ -79,36 +255,23 @@ export default function Dashboard() {
      Kỳ thi
   ========================== */
 
-  const exams = [
-    {
-      id: 1,
-      subject: "Cấu trúc dữ liệu",
-      date: "2026-03-15",
-      time: "08:00",
-      duration: 90
-    },
-    {
-      id: 2,
-      subject: "Toán cao cấp",
-      date: "2026-03-16",
-      time: "13:00",
-      duration: 60
-    }
-  ]
+  const upcomingCards = sortedUpcomingExams.slice(0, 3)
 
-  const nextExam = exams[0]
+  const formatExamDate = (date: string | null) => {
+    if (!date) return "--"
+    const d = new Date(date)
+    if (Number.isNaN(d.getTime())) return "--"
 
-  const calculateCountdown = (date: string) => {
+    return `${d.toLocaleDateString("vi-VN")} - ${d.toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`
 
-    const examDate = new Date(date)
-    const now = new Date()
+  }
 
-    const diff = examDate.getTime() - now.getTime()
-
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-
-    return days > 0 ? `${days} ngày nữa` : "Sắp diễn ra"
-
+  const studentInfoWithClass = {
+    ...studentInfo,
+    class: resolvedClassText,
   }
 
   return (
@@ -120,7 +283,7 @@ export default function Dashboard() {
       <div className="mb-8">
 
         <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent mb-3">
-          Xin chào, {studentInfo.name}!
+          Xin chào, {studentInfoWithClass.name}!
         </h1>
 
         <p className="text-slate-600">
@@ -135,12 +298,12 @@ export default function Dashboard() {
 
         <div className="bg-white border rounded-lg p-6 shadow-sm">
           <p className="text-sm text-slate-500 mb-2">MSSV</p>
-          <p className="text-2xl font-bold">{studentInfo.studentId}</p>
+          <p className="text-2xl font-bold">{studentInfoWithClass.studentId}</p>
         </div>
 
         <div className="bg-white border rounded-lg p-6 shadow-sm">
           <p className="text-sm text-slate-500 mb-2">Lớp học</p>
-          <p className="text-lg font-semibold">{studentInfo.class}</p>
+          <p className="text-lg font-semibold">{studentInfoWithClass.class}</p>
         </div>
 
         <div className="bg-white border rounded-lg p-6 shadow-sm">
@@ -167,7 +330,25 @@ export default function Dashboard() {
               </h2>
             </div>
 
-            {exams.map(exam => (
+            {loading && (
+              <div className="py-8 flex items-center justify-center text-slate-500 gap-2">
+                <Loader2 className="animate-spin" size={18} />
+                Đang tải kỳ thi...
+              </div>
+            )}
+
+            {!loading && error && (
+              <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-700 flex items-start gap-2">
+                <AlertCircle size={18} className="mt-0.5" />
+                <div>{error}</div>
+              </div>
+            )}
+
+            {!loading && !error && upcomingCards.length === 0 && (
+              <p className="text-slate-500">Chưa có kỳ thi theo học kỳ/năm học đã chọn.</p>
+            )}
+
+            {!loading && !error && upcomingCards.map(exam => (
 
               <div
                 key={exam.id}
@@ -175,18 +356,22 @@ export default function Dashboard() {
               >
 
                 <h3 className="font-semibold">
-                  {exam.subject}
+                  {exam.ten_ky_thi}
                 </h3>
 
                 <p className="text-sm text-slate-600">
-                  {exam.date} - {exam.time}
+                  {formatExamDate(exam.thoi_gian_bat_dau)}
+                </p>
+
+                <p className="text-sm text-slate-500 mt-1">
+                  Thời lượng: {exam.thoi_gian_lam_bai || 0} phút
                 </p>
 
                 <button
-                  onClick={() => navigate(`/sinhvien/lam-bai/${exam.id}`)}
-                  className="mt-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg"
+                  disabled
+                  className="mt-3 w-full bg-slate-300 text-slate-600 py-2 rounded-lg cursor-not-allowed"
                 >
-                  Vào thi
+                  Chưa tới giờ thi
                 </button>
 
               </div>
@@ -219,8 +404,9 @@ export default function Dashboard() {
                 onChange={e => setSemester(e.target.value)}
               >
                 <option value="">Chọn học kỳ</option>
-                <option value="HK1">HK1</option>
-                <option value="HK2">HK2</option>
+                {semesterOptions.map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
               </select>
 
               <select
@@ -229,17 +415,18 @@ export default function Dashboard() {
                 onChange={e => setYear(e.target.value)}
               >
                 <option value="">Chọn năm học</option>
-                <option value="2025-2026">2025-2026</option>
-                <option value="2024-2025">2024-2025</option>
+                {yearOptions.map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
               </select>
 
             </div>
 
-            {filteredSubjects.length > 0 ? (
+            {chartData.length > 0 ? (
 
               <ResponsiveContainer width="100%" height={250}>
 
-                <BarChart data={filteredSubjects}>
+                <BarChart data={chartData}>
 
                   <CartesianGrid strokeDasharray="3 3" />
 
@@ -262,7 +449,7 @@ export default function Dashboard() {
             ) : (
 
               <p className="text-slate-500">
-                Hãy chọn học kỳ và năm học để xem biểu đồ
+                Chưa có dữ liệu điểm luyện tập
               </p>
 
             )}
@@ -284,17 +471,19 @@ export default function Dashboard() {
               Kỳ thi gần nhất
             </h3>
 
-            <p className="font-semibold text-lg">
-              {nextExam.subject}
-            </p>
-
-            <p className="text-slate-600 text-sm">
-              {nextExam.date} - {nextExam.time}
-            </p>
-
-            <p className="mt-2 text-indigo-600 font-medium">
-              {calculateCountdown(nextExam.date)}
-            </p>
+            {recentExams.length > 0 ? (
+              <div className="space-y-3">
+                {recentExams.map((exam) => (
+                  <div key={exam.id} className="border rounded-lg p-3">
+                    <p className="font-semibold text-sm">{exam.ten_ky_thi}</p>
+                    <p className="text-slate-600 text-xs mt-1">{formatExamDate(exam.thoi_gian_bat_dau)}</p>
+                    <p className="mt-2 text-indigo-600 text-sm font-medium">{getExamTimeMeta(exam).status}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-slate-500 text-sm">Chưa có kỳ thi gần đây</p>
+            )}
 
           </div>
 
@@ -315,7 +504,7 @@ export default function Dashboard() {
               <span>Hoàn thành</span>
 
               <span>
-                {completedSubjects}/{totalSubjects} môn
+                {completedSubjects}/{practiceHistory.length} lượt
               </span>
 
             </div>

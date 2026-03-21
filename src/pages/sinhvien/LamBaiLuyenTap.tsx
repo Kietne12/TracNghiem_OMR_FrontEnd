@@ -1,129 +1,234 @@
 import DashboardLayout from "../../layout/DashboardLayout"
-import { Clock, CheckCircle, Flag } from "lucide-react"
+import { Clock, CheckCircle, Flag, Loader2, AlertCircle } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
+import { useAuth } from "../../hooks/useAuth"
+import { startPractice, submitPractice } from "../../services/practiceService"
 
 export default function LamBaiLuyenTap() {
 
-    const { practiceId } = useParams()
-    const navigate = useNavigate()
-
-    const practice = {
-        id: practiceId,
-        name: "Luyện tập trắc nghiệm",
-        duration: 15
+    interface OptionItem {
+        label: string
+        text: string
+        originalLabel: string
     }
 
-    const questions = [
-        {
-            id: 1,
-            text: "Stack hoạt động theo nguyên tắc nào?",
-            options: ["A. FIFO", "B. LIFO", "C. Random", "D. Queue"],
-            correct: "B"
-        },
-        {
-            id: 2,
-            text: "Đạo hàm của x² là?",
-            options: ["A. 2x", "B. x²", "C. x", "D. 2"],
-            correct: "A"
-        },
-        {
-            id: 3,
-            text: "Queue hoạt động theo nguyên tắc?",
-            options: ["A. FIFO", "B. LIFO", "C. Stack", "D. Random"],
-            correct: "A"
-        },
-        {
-            id: 4,
-            text: "C++ là ngôn ngữ?",
-            options: [
-                "A. Lập trình hướng đối tượng",
-                "B. Markup",
-                "C. Database",
-                "D. Script"
-            ],
-            correct: "A"
-        },
-        {
-            id: 5,
-            text: "lim sinx/x khi x → 0 bằng?",
-            options: ["A. 0", "B. 1", "C. ∞", "D. Không tồn tại"],
-            correct: "B"
+    interface QuestionItem {
+        id: number
+        text: string
+        options: OptionItem[]
+        correct: string
+    }
+
+    const shuffleArray = <T,>(arr: T[]) => {
+        const cloned = [...arr]
+        for (let i = cloned.length - 1; i > 0; i -= 1) {
+            const j = Math.floor(Math.random() * (i + 1))
+                ;[cloned[i], cloned[j]] = [cloned[j], cloned[i]]
         }
-    ]
+        return cloned
+    }
+
+    const toBoolean = (value: unknown, fallback = false) => {
+        if (typeof value === "boolean") return value
+        if (typeof value === "number") return value !== 0
+        if (typeof value === "string") {
+            const normalized = value.trim().toLowerCase()
+            if (["true", "1", "yes", "on"].includes(normalized)) return true
+            if (["false", "0", "no", "off", ""].includes(normalized)) return false
+        }
+        return fallback
+    }
+
+    const { practiceId } = useParams()
+    const navigate = useNavigate()
+    const { account } = useAuth()
+
+    const [practice, setPractice] = useState({
+        id: practiceId,
+        name: "Luyện tập",
+        duration: 15,
+    })
+    const [historyId, setHistoryId] = useState<number | null>(null)
+    const [questions, setQuestions] = useState<QuestionItem[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState("")
+    const [submitting, setSubmitting] = useState(false)
 
     const [currentQuestion, setCurrentQuestion] = useState(0)
     const [answers, setAnswers] = useState<Record<number, string>>({})
     const [flagged, setFlagged] = useState<number[]>([])
-    const [timeRemaining, setTimeRemaining] = useState(practice.duration * 60)
+    const [timeRemaining, setTimeRemaining] = useState(0)
 
     useEffect(() => {
+        let mounted = true
+
+        const loadPractice = async () => {
+            setLoading(true)
+            setError("")
+
+            try {
+                const response = await startPractice(Number(practiceId), account?.user_id)
+                const payload = response?.data
+                const practiceData = payload?.practice
+                const history = payload?.history
+                const rows = Array.isArray(payload?.questions) ? payload.questions : []
+                const config = payload?.practice?.cau_hinh || {}
+                const shouldShuffleQuestions = toBoolean(config?.tron_cau_hoi, false)
+                const shouldShuffleAnswers = toBoolean(config?.tron_dap_an, false)
+
+                const mappedQuestions: QuestionItem[] = rows.map((q: any) => {
+                    const originalOptions = [
+                        { label: "A", text: q.dap_an_a || "" },
+                        { label: "B", text: q.dap_an_b || "" },
+                        { label: "C", text: q.dap_an_c || "" },
+                        { label: "D", text: q.dap_an_d || "" },
+                    ]
+
+                    const arranged = shouldShuffleAnswers
+                        ? shuffleArray(originalOptions)
+                        : originalOptions
+
+                    const displayLabels = ["A", "B", "C", "D"]
+                    const mappedOptions: OptionItem[] = arranged.map((opt, idx) => ({
+                        label: displayLabels[idx],
+                        text: opt.text,
+                        originalLabel: opt.label,
+                    }))
+
+                    return {
+                        id: q.id,
+                        text: q.noi_dung,
+                        options: mappedOptions,
+                        correct: String(q.dap_an_dung || "").toUpperCase(),
+                    }
+                })
+
+                const finalQuestions = shouldShuffleQuestions
+                    ? shuffleArray(mappedQuestions)
+                    : mappedQuestions
+
+                if (!mounted) return
+
+                const duration = Number(practiceData?.thoi_gian_lam_bai) || 15
+                setPractice({
+                    id: practiceData?.id || practiceId,
+                    name: practiceData?.ten_bai || "Luyện tập",
+                    duration,
+                })
+                setHistoryId(Number(history?.id) || null)
+                setQuestions(finalQuestions)
+                setTimeRemaining(duration * 60)
+            } catch (err: any) {
+                if (!mounted) return
+                setError(err?.response?.data?.error || "Không thể tải bài luyện tập")
+            } finally {
+                if (mounted) setLoading(false)
+            }
+        }
+
+        loadPractice()
+
+        return () => {
+            mounted = false
+        }
+    }, [practiceId, account?.user_id])
+
+    useEffect(() => {
+        if (loading || questions.length === 0 || timeRemaining <= 0) return
 
         const timer = setInterval(() => {
-
-            setTimeRemaining(prev => {
-
+            setTimeRemaining((prev) => {
                 if (prev <= 1) {
                     clearInterval(timer)
-                    submitPractice()
+                    submitCurrentPractice()
                     return 0
                 }
-
                 return prev - 1
-
             })
-
         }, 1000)
 
         return () => clearInterval(timer)
-
-    }, [])
+    }, [loading, questions.length])
 
     const handleSelectAnswer = (option: string) => {
+        if (!questions[currentQuestion]) return
 
-        setAnswers(prev => ({
+        setAnswers((prev) => ({
             ...prev,
-            [questions[currentQuestion].id]: option
+            [questions[currentQuestion].id]: option,
         }))
-
     }
 
     const toggleFlag = () => {
+        if (!questions[currentQuestion]) return
 
         const qId = questions[currentQuestion].id
 
         if (flagged.includes(qId)) {
-            setFlagged(flagged.filter(id => id !== qId))
+            setFlagged(flagged.filter((id) => id !== qId))
         } else {
             setFlagged([...flagged, qId])
         }
-
     }
 
-    const submitPractice = () => {
+    const submitCurrentPractice = async () => {
+        if (!historyId || submitting || questions.length === 0) return
 
-        let correct = 0
+        try {
+            setSubmitting(true)
+            const payloadAnswers = questions.map((q) => ({
+                cau_hoi_id: q.id,
+                dap_an_student: answers[q.id] || "",
+            }))
 
-        questions.forEach(q => {
+            const response = await submitPractice(historyId, payloadAnswers)
+            const data = response?.data
 
-            if (answers[q.id] === q.correct) {
-                correct++
-            }
+            navigate("/sinhvien/ketqua-luyen-tap", {
+                state: {
+                    score: String(data?.score ?? 0),
+                    correct: data?.correctCount ?? 0,
+                    total: data?.totalCount ?? questions.length,
+                    questions,
+                    answers,
+                },
+            })
+        } catch (err: any) {
+            setError(err?.response?.data?.error || "Nộp bài luyện tập thất bại")
+        } finally {
+            setSubmitting(false)
+        }
+    }
 
-        })
+    if (loading) {
+        return (
+            <DashboardLayout role="SINH VIÊN">
+                <div className="py-20 flex items-center justify-center gap-2 text-slate-500">
+                    <Loader2 className="animate-spin" size={18} />
+                    Đang tải bài luyện tập...
+                </div>
+            </DashboardLayout>
+        )
+    }
 
-        const score = ((correct / questions.length) * 10).toFixed(2)
+    if (error && questions.length === 0) {
+        return (
+            <DashboardLayout role="SINH VIÊN">
+                <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-700 flex items-start gap-2">
+                    <AlertCircle size={18} className="mt-0.5" />
+                    <div>{error}</div>
+                </div>
+            </DashboardLayout>
+        )
+    }
 
-        navigate("/sinhvien/ketqua-luyen-tap", {
-            state: {
-                score: score,
-                correct: correct,
-                total: questions.length,
-                questions: questions,
-                answers: answers
-            }
-        })
-
+    if (questions.length === 0) {
+        return (
+            <DashboardLayout role="SINH VIÊN">
+                <div className="text-slate-500">Bài luyện tập chưa có câu hỏi.</div>
+            </DashboardLayout>
+        )
     }
 
     const minutes = Math.floor(timeRemaining / 60)
@@ -199,9 +304,9 @@ export default function LamBaiLuyenTap() {
 
                             <button
                                 key={idx}
-                                onClick={() => handleSelectAnswer(option.charAt(0))}
+                                onClick={() => handleSelectAnswer(option.originalLabel)}
                                 className={`w-full p-4 text-left rounded-lg border
-                ${answers[current.id] === option.charAt(0)
+                ${answers[current.id] === option.originalLabel
                                         ? "border-indigo-600 bg-indigo-50"
                                         : "border-slate-200 hover:bg-slate-50"
                                     }`}
@@ -210,17 +315,17 @@ export default function LamBaiLuyenTap() {
                                 <div className="flex items-center">
 
                                     <div className={`w-6 h-6 rounded-full border mr-3 flex items-center justify-center
-                  ${answers[current.id] === option.charAt(0)
+                  ${answers[current.id] === option.originalLabel
                                             ? "bg-indigo-600 border-indigo-600"
                                             : "border-slate-300"
                                         }`}>
 
-                                        {answers[current.id] === option.charAt(0) &&
+                                        {answers[current.id] === option.originalLabel &&
                                             <CheckCircle size={16} className="text-white" />}
 
                                     </div>
 
-                                    {option}
+                                    {`${option.label}. ${option.text}`}
 
                                 </div>
 
@@ -245,10 +350,11 @@ export default function LamBaiLuyenTap() {
                         {currentQuestion === questions.length - 1 ? (
 
                             <button
-                                onClick={submitPractice}
+                                onClick={submitCurrentPractice}
+                                disabled={submitting}
                                 className="px-6 py-2 bg-green-600 text-white rounded-lg"
                             >
-                                Nộp bài
+                                {submitting ? "Đang nộp..." : "Nộp bài"}
                             </button>
 
                         ) : (

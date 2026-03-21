@@ -1,51 +1,94 @@
 import DashboardLayout from "../../layout/DashboardLayout"
-import { Clock, Calendar, CheckCircle, TrendingUp, FileText } from "lucide-react"
-import { useState } from "react"
+import { Clock, Calendar, CheckCircle, TrendingUp, FileText, Loader2, AlertCircle } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "../../hooks/useAuth"
+import api from "../../services/api"
 
 export default function LichSuLamBai() {
 
-  const navigate = useNavigate()
+  interface HistoryItem {
+    id: number
+    ky_thi_id: number
+    ten_ky_thi: string
+    mon_hoc: string
+    thoi_gian_bat_dau: string | null
+    thoi_gian_lam_bai: number | null
+    tong_diem: number | null
+  }
 
-  const history = [
-    {
-      id: 1,
-      subject: "Toán cao cấp 1",
-      exam: "Giữa kỳ",
-      date: "2026-03-15",
-      startTime: "08:00",
-      duration: 90,
-      score: 8.5,
-      status: "Hoàn thành"
-    },
-    {
-      id: 2,
-      subject: "Cấu trúc dữ liệu",
-      exam: "Kiểm tra chương 2",
-      date: "2026-03-10",
-      startTime: "13:30",
-      duration: 60,
-      score: 7.2,
-      status: "Hoàn thành"
-    },
-    {
-      id: 3,
-      subject: "Lập trình C++",
-      exam: "Quiz chương 3",
-      date: "2026-03-05",
-      startTime: "09:00",
-      duration: 30,
-      score: 4.5,
-      status: "Hoàn thành"
+  const navigate = useNavigate()
+  const { account } = useAuth()
+
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [history, setHistory] = useState<HistoryItem[]>([])
+
+  useEffect(() => {
+    let mounted = true
+
+    const loadHistory = async () => {
+      setLoading(true)
+      setError("")
+      try {
+        const response = await api.get(
+          account?.user_id
+            ? `/api/exams/history/student/${account.user_id}`
+            : "/api/exams/history/student"
+        )
+
+        if (!mounted) return
+
+        const data = Array.isArray(response.data?.history) ? response.data.history : []
+        setHistory(data)
+      } catch (err: any) {
+        if (!mounted) return
+        setError(err?.response?.data?.message || "Không thể tải lịch sử làm bài")
+      } finally {
+        if (mounted) setLoading(false)
+      }
     }
-  ]
+
+    loadHistory()
+
+    return () => {
+      mounted = false
+    }
+  }, [account?.user_id])
 
   const [search, setSearch] = useState("")
   const [subjectFilter, setSubjectFilter] = useState("Tất cả")
 
-  const subjects = ["Tất cả", ...new Set(history.map(i => i.subject))]
+  const subjects = ["Tất cả", ...new Set(history.map(i => i.mon_hoc))]
 
-  const filtered = history
+  const formatDateTime = (value: string | null) => {
+    if (!value) return { date: "--", time: "--" }
+    const d = new Date(value)
+    if (Number.isNaN(d.getTime())) return { date: "--", time: "--" }
+
+    return {
+      date: d.toLocaleDateString("vi-VN"),
+      time: d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+    }
+  }
+
+  const normalizedHistory = useMemo(
+    () => history.map((item) => {
+      const dateTime = formatDateTime(item.thoi_gian_bat_dau)
+      return {
+        ...item,
+        subject: item.mon_hoc,
+        exam: item.ten_ky_thi,
+        date: dateTime.date,
+        startTime: dateTime.time,
+        duration: item.thoi_gian_lam_bai || 0,
+        score: typeof item.tong_diem === "number" ? item.tong_diem : 0,
+      }
+    }),
+    [history]
+  )
+
+  const filtered = normalizedHistory
     .filter(item =>
       item.subject.toLowerCase().includes(search.toLowerCase()) ||
       item.exam.toLowerCase().includes(search.toLowerCase())
@@ -55,12 +98,12 @@ export default function LichSuLamBai() {
     )
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
-  const total = history.length
+  const total = normalizedHistory.length
 
   const avgScore =
-    history.length > 0
+    normalizedHistory.length > 0
       ? (
-        history.reduce((sum, i) => sum + i.score, 0) / history.length
+        normalizedHistory.reduce((sum, i) => sum + i.score, 0) / normalizedHistory.length
       ).toFixed(1)
       : 0
 
@@ -155,7 +198,21 @@ export default function LichSuLamBai() {
           Danh sách bài thi
         </h2>
 
-        {filtered.length === 0 ? (
+        {loading && (
+          <div className="py-10 flex items-center justify-center gap-2 text-slate-500">
+            <Loader2 className="animate-spin" size={18} />
+            Đang tải lịch sử làm bài...
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-700 flex items-start gap-2">
+            <AlertCircle size={18} className="mt-0.5" />
+            <div>{error}</div>
+          </div>
+        )}
+
+        {!loading && !error && filtered.length === 0 ? (
 
           <div className="text-center py-10 text-slate-500">
             Bạn chưa có lịch sử làm bài
