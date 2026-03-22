@@ -1,6 +1,6 @@
 import DashboardLayout from "../../layout/DashboardLayout"
 import { useState, useEffect } from "react"
-import { Save, Database, Trash2, CheckCircle, UploadCloud, Download, Loader2 } from "lucide-react"
+import { Save, Database, CheckCircle, UploadCloud, Download, Loader2 } from "lucide-react"
 
 export default function QuanLyHeThong() {
 
@@ -140,11 +140,6 @@ export default function QuanLyHeThong() {
       showToast("Restore thành công")
     }, 500)
   }
-  const handleClearCache = async () => {
-    await fetch(`${API}/cache`, { method: "DELETE" })
-    showToast("Đã xóa cache")
-  }
-
   const showToast = (msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(""), 1500)
@@ -163,52 +158,46 @@ export default function QuanLyHeThong() {
       <div className="bg-white p-6 rounded-xl shadow mb-6">
         <h2 className="text-lg font-semibold mb-4">⚙️ Cài đặt hệ thống</h2>
 
-        <div className="grid grid-cols-2 gap-6">
-
-          <div>
-            <label className="font-medium">Thời gian làm bài (giây)</label>
-            <input type="number" name="examTime" value={settings.examTime}
-              onChange={handleChange} className="border mt-1 p-2 w-full rounded" />
-          </div>
-
-          <div>
-            <label className="font-medium">Số câu tối đa</label>
-            <input type="number" name="maxQuestions" value={settings.maxQuestions}
-              onChange={handleChange} className="border mt-1 p-2 w-full rounded" />
-          </div>
-
-          <div>
-            <label className="font-medium">Dung lượng upload (MB)</label>
-            <input type="number" name="maxUpload" value={settings.maxUpload}
-              onChange={handleChange} className="border mt-1 p-2 w-full rounded" />
-          </div>
-
-          <div>
-            <label className="font-medium">Số lần đăng nhập sai</label>
-            <input type="number" name="maxLoginAttempts" value={settings.maxLoginAttempts}
-              onChange={handleChange} className="border mt-1 p-2 w-full rounded" />
-          </div>
-
-          <div>
-            <label className="font-medium">Thời gian phiên (phút)</label>
-            <input type="number" name="sessionTimeout" value={settings.sessionTimeout}
-              onChange={handleChange} className="border mt-1 p-2 w-full rounded" />
-          </div>
-
-          <div className="flex items-center mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="border border-slate-200 rounded-lg p-4">
+            <label className="font-medium text-slate-700 block">Thời gian phiên (phút)</label>
             <input
-              type="checkbox"
-              checked={settings.forcePasswordChange}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  forcePasswordChange: e.target.checked
-                })
-              }
+              type="number"
+              name="sessionTimeout"
+              value={settings.sessionTimeout}
+              onChange={handleChange}
+              className="border border-slate-300 mt-2 p-2.5 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
-            <span className="ml-2">Bắt buộc đổi mật khẩu</span>
           </div>
 
+          <div className="border border-slate-200 rounded-lg p-4">
+            <label className="font-medium text-slate-700 block">Số lần đăng nhập sai</label>
+            <input
+              type="number"
+              name="maxLoginAttempts"
+              value={settings.maxLoginAttempts}
+              onChange={handleChange}
+              className="border border-slate-300 mt-2 p-2.5 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div className="lg:col-span-2 border border-slate-200 rounded-lg p-4">
+            <label className="flex items-center gap-2 font-medium text-slate-700 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={settings.forcePasswordChange}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    forcePasswordChange: e.target.checked
+                  })
+                }
+                className="h-4 w-4"
+              />
+              Bắt buộc đổi mật khẩu
+            </label>
+            <p className="text-sm text-slate-500 mt-2">Yêu cầu người dùng thay mật khẩu ngay ở lần đăng nhập tiếp theo.</p>
+          </div>
         </div>
 
         <button
@@ -315,17 +304,6 @@ export default function QuanLyHeThong() {
           </div>
         </div>
       )}
-
-      {/* CACHE */}
-      <div className="bg-white p-6 rounded-xl shadow">
-        <button
-          onClick={handleClearCache}
-          className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded flex items-center gap-2"
-        >
-          <Trash2 size={16} />
-          Xóa cache
-        </button>
-      </div>
 
       {/* TOAST */}
       {toast && (

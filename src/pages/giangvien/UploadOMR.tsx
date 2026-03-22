@@ -43,7 +43,7 @@ export default function UploadOMR() {
   }, []);
 
   const selectedExam = exams.find((item) => item.id === selectedExamId) || null;
-  const validExamCodes = (selectedExam?.cau_hinh?.ma_de_data || [])
+  const validExamCodes = (Array.isArray(selectedExam?.cau_hinh?.ma_de_data) ? selectedExam.cau_hinh.ma_de_data : [])
     .map((item) => item.ma_de?.toString().trim())
     .filter((item): item is string => Boolean(item));
 
